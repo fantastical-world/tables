@@ -123,7 +123,7 @@ func (d Database) LoadTable(csvFile string, table string, rollExpression string)
 			return err
 		}
 
-		err = b.Put([]byte("meta"), encoded)
+		err = b.Put([]byte("tables.meta"), encoded)
 		if err != nil {
 			return err
 		}
@@ -156,7 +156,7 @@ func (d Database) AppendToTable(csvFile string, table string, rollExpression str
 			return fmt.Errorf("can not append to table [%s] since does not exist, try running again without -a", table)
 		}
 
-		meta := b.Get([]byte("meta"))
+		meta := b.Get([]byte("tables.meta"))
 		if meta == nil {
 			return errors.New("metadata does not exist for table")
 		}
@@ -218,7 +218,7 @@ func (d Database) AppendToTable(csvFile string, table string, rollExpression str
 			return err
 		}
 
-		err = b.Put([]byte("meta"), encoded)
+		err = b.Put([]byte("tables.meta"), encoded)
 		if err != nil {
 			return err
 		}
@@ -247,7 +247,7 @@ func (d Database) GetTable(table string) ([][]string, error) {
 			return fmt.Errorf("table [%s] does not exist", table)
 		}
 		c := b.Cursor()
-		meta := b.Get([]byte("meta"))
+		meta := b.Get([]byte("tables.meta"))
 		if meta != nil {
 			var decoded tables.Meta
 			err := json.Unmarshal(meta, &decoded)
@@ -258,7 +258,7 @@ func (d Database) GetTable(table string) ([][]string, error) {
 		}
 		var rows []tables.Row
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			if string(k) == "meta" {
+			if string(k) == "tables.meta" {
 				continue
 			}
 			var decoded tables.Row
@@ -368,7 +368,7 @@ func (d Database) RandomRow(table string) ([]string, int, error) {
 			return fmt.Errorf("table [%s] does not exist", table)
 		}
 
-		meta := b.Get([]byte("meta"))
+		meta := b.Get([]byte("tables.meta"))
 		if meta == nil {
 			return errors.New("metadata does not exist for table")
 		}
@@ -422,7 +422,7 @@ func (d Database) GetRow(roll int, table string) ([]string, error) {
 			//let's check for any ranged rows that may match
 			c := b.Cursor()
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				if string(k) == "meta" || !rangedRoll(string(k)) {
+				if string(k) == "tables.meta" || !rangedRoll(string(k)) {
 					continue
 				}
 
@@ -438,7 +438,7 @@ func (d Database) GetRow(roll int, table string) ([]string, error) {
 		}
 
 		advanced := false
-		meta := b.Get([]byte("meta"))
+		meta := b.Get([]byte("tables.meta"))
 		if meta != nil {
 			var decoded tables.Meta
 			err := json.Unmarshal(meta, &decoded)
@@ -490,7 +490,7 @@ func (d Database) GetHeader(table string) ([]string, error) {
 		if b == nil {
 			return fmt.Errorf("table [%s] does not exist", table)
 		}
-		meta := b.Get([]byte("meta"))
+		meta := b.Get([]byte("tables.meta"))
 		if meta != nil {
 			var decoded tables.Meta
 			err := json.Unmarshal(meta, &decoded)
@@ -520,7 +520,7 @@ func (d Database) ListTables() ([]string, error) {
 	defer db.Close()
 	err = db.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
-			meta := b.Get([]byte("meta"))
+			meta := b.Get([]byte("tables.meta"))
 			if meta != nil {
 				var decoded tables.Meta
 				err := json.Unmarshal(meta, &decoded)
