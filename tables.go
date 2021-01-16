@@ -42,7 +42,7 @@ type Backingstore interface {
 	AppendToTable(csvFile string, table string, rollExpression string) error
 	GetTable(table string) ([][]string, error)
 	TableExpression(expression string) ([][]string, error)
-	RandomRow(table string) ([]string, error)
+	RandomRow(table string) ([]string, int, error)
 	GetRow(roll int, table string) ([]string, error)
 	GetHeader(table string) ([]string, error)
 	ListTables() ([]string, error)

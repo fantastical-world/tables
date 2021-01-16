@@ -289,6 +289,12 @@ func (d Database) GetTable(table string) ([][]string, error) {
 
 //TableExpression returns table rows based on expression
 func (d Database) TableExpression(expression string) ([][]string, error) {
+	wantsUnique := false
+	if strings.HasPrefix(expression, "uni:") {
+		wantsUnique = true
+		expression = strings.ReplaceAll(expression, "uni:", "")
+	}
+
 	var data [][]string
 	//simple 1d4+1 style expressions for tables (n?table or n#table)
 	re := regexp.MustCompile(`^(?P<num>[0-9]*)([\?|#])(?P<table>[a-zA-Z,0-9,_,\.,\-]+)$`)
@@ -313,8 +319,25 @@ func (d Database) TableExpression(expression string) ([][]string, error) {
 	}
 	data = append(data, header)
 	if request == "?" {
+		if wantsUnique {
+			var previousRolls []int
+			for i := 0; i < number; i++ {
+				row, roll, err := d.RandomRow(tableName)
+				if containsRoll(previousRolls, roll) {
+					i--
+					continue
+				}
+				previousRolls = append(previousRolls, roll)
+				if err != nil {
+					return nil, err
+				}
+				data = append(data, row)
+			}
+			return data, nil
+		}
+
 		for i := 0; i < number; i++ {
-			row, err := d.RandomRow(tableName)
+			row, _, err := d.RandomRow(tableName)
 			if err != nil {
 				return nil, err
 			}
@@ -333,11 +356,11 @@ func (d Database) TableExpression(expression string) ([][]string, error) {
 }
 
 //RandomRow returns a random row entry from the specified table and it's roll value.
-func (d Database) RandomRow(table string) ([]string, error) {
+func (d Database) RandomRow(table string) ([]string, int, error) {
 	rollExpression := ""
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(table))
@@ -362,21 +385,21 @@ func (d Database) RandomRow(table string) ([]string, error) {
 	if err != nil {
 		err = db.Close()
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
-		return nil, err
+		return nil, 0, err
 	}
 	err = db.Close()
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	_, dieRoll, _ := dice.RollExpression(rollExpression)
 	row, err := d.GetRow(dieRoll, table)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return row, nil
+	return row, dieRoll, nil
 }
 
 //GetRow returns the row entry from the specified table based on the roll value.
@@ -642,6 +665,16 @@ func rollInRange(value int, rollRange string) bool {
 
 	if value >= start && value <= end {
 		return true
+	}
+
+	return false
+}
+
+func containsRoll(i []int, roll int) bool {
+	for _, v := range i {
+		if v == roll {
+			return true
+		}
 	}
 
 	return false
