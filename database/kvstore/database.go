@@ -44,6 +44,95 @@ func (d Database) Prepare() error {
 
 //LoadTable will load a table with the CSV data. All existing data in the table will be replaced.
 func (d Database) LoadTable(csvFile string, table string, rollExpression string) error {
+	if rollExpression == "" {
+		return d.loadStandardTable(csvFile, table)
+	}
+
+	return d.loadRollableTable(csvFile, table, rollExpression)
+}
+
+func (d Database) loadStandardTable(csvFile string, table string) error {
+	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	err = db.Update(func(tx *bolt.Tx) error {
+		records, err := readCSV(csvFile)
+		if err != nil {
+			return err
+		}
+
+		b := tx.Bucket([]byte(table))
+		if b != nil {
+			err = tx.DeleteBucket([]byte(table))
+			if err != nil {
+				return err
+			}
+		}
+
+		b, err = tx.CreateBucket([]byte(table))
+		if err != nil {
+			return err
+		}
+
+		var headers []string
+		tableType := tables.Simple
+
+		for i, line := range records {
+
+			if i == 0 {
+				for _, header := range line {
+					headers = append(headers, header)
+				}
+				continue
+			}
+
+			//check looks odd but once we find a row with at least one rollable string we won't bother checking the remainder
+			if tableType != tables.Advanced {
+				for _, value := range line {
+					if RollableString(value) {
+						tableType = tables.Advanced
+						break
+					}
+				}
+			}
+
+			//for standard tables we don't have a "dieRoll", but we do use the row number here for sorting purposes.
+			row := tables.Row{DieRoll: i, RollRange: "", Results: line}
+			encodedRow, err := json.Marshal(row)
+			if err != nil {
+				return err
+			}
+
+			err = b.Put([]byte(line[0]), encodedRow)
+			if err != nil {
+				return err
+			}
+		}
+
+		meta := tables.Meta{Type: tableType, Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: false, RollExpression: ""}
+		encoded, err := json.Marshal(meta)
+		if err != nil {
+			return err
+		}
+
+		err = b.Put([]byte("tables.meta"), encoded)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d Database) loadRollableTable(csvFile string, table string, rollExpression string) error {
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
 		return err
@@ -117,103 +206,8 @@ func (d Database) LoadTable(csvFile string, table string, rollExpression string)
 			}
 		}
 
-		meta := tables.Meta{Type: tableType, Name: table, Headers: headers, ColumnCount: len(headers), RollExpression: rollExpression}
+		meta := tables.Meta{Type: tableType, Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: true, RollExpression: rollExpression}
 		encoded, err := json.Marshal(meta)
-		if err != nil {
-			return err
-		}
-
-		err = b.Put([]byte("tables.meta"), encoded)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-//AppendToTable will append CSV data to a table.
-func (d Database) AppendToTable(csvFile string, table string, rollExpression string) error {
-	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	err = db.Update(func(tx *bolt.Tx) error {
-		records, err := readCSV(csvFile)
-		if err != nil {
-			return err
-		}
-
-		b := tx.Bucket([]byte(table))
-		if b == nil {
-			return fmt.Errorf("can not append to table [%s] since does not exist, try running again without -a", table)
-		}
-
-		meta := b.Get([]byte("tables.meta"))
-		if meta == nil {
-			return errors.New("metadata does not exist for table")
-		}
-
-		var decoded tables.Meta
-		err = json.Unmarshal(meta, &decoded)
-		if err != nil {
-			return err
-		}
-
-		for i, line := range records {
-			if i == 0 {
-				if len(line) != decoded.ColumnCount {
-					return fmt.Errorf("did not append data because column counts do not match, check your CSV")
-				}
-				continue
-			}
-
-			dieRoll := 0
-			rollRange := ""
-
-			if rangedRoll(line[0]) {
-				rollRange = line[0]
-				//we will set dieRoll to the range start for sorting purposes
-				parts := strings.Split(line[0], "-")
-				dieRoll, _ = strconv.Atoi(parts[0])
-			} else {
-				dieRoll, err = strconv.Atoi(line[0])
-				if err != nil {
-					return fmt.Errorf("first column must be an integer since it represents a die roll")
-				}
-			}
-
-			//check looks odd but once we find a row with at least one rollable string we won't bother checking the remainder
-			if decoded.Type != tables.Advanced {
-				for _, value := range line {
-					if RollableString(value) {
-						decoded.Type = tables.Advanced
-						break
-					}
-				}
-			}
-
-			row := tables.Row{DieRoll: dieRoll, RollRange: rollRange, Results: line}
-			encodedRow, err := json.Marshal(row)
-			if err != nil {
-				return err
-			}
-
-			err = b.Put([]byte(line[0]), encodedRow)
-			if err != nil {
-				return err
-			}
-		}
-
-		decoded.RollExpression = rollExpression
-		encoded, err := json.Marshal(decoded)
 		if err != nil {
 			return err
 		}
@@ -313,6 +307,15 @@ func (d Database) TableExpression(expression string) ([][]string, error) {
 	}
 
 	tableName := match[3]
+	meta, err := d.GetMeta(tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	if !meta.RollableTable {
+		return nil, fmt.Errorf("not a rollable table, no roll expression available")
+	}
+
 	header, err := d.GetHeader(tableName)
 	if err != nil {
 		return nil, err
@@ -527,7 +530,7 @@ func (d Database) ListTables() ([]string, error) {
 				if err != nil {
 					return err
 				}
-				tableData = append(tableData, fmt.Sprintf("%s,%s,%s", decoded.Name, decoded.RollExpression, decoded.Type))
+				tableData = append(tableData, fmt.Sprintf("%s,%s,%s,%t", decoded.Name, decoded.RollExpression, decoded.Type, decoded.RollableTable))
 			}
 			return nil
 		})
@@ -569,6 +572,37 @@ func (d Database) Delete(name string) error {
 	}
 
 	return nil
+}
+
+//GetMeta returns a table's meta data.
+func (d Database) GetMeta(name string) (tables.Meta, error) {
+	var meta tables.Meta
+	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
+	if err != nil {
+		return meta, err
+	}
+	defer db.Close()
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(name))
+		if b == nil {
+			return fmt.Errorf("table [%s] does not exist", name)
+		}
+		m := b.Get([]byte("tables.meta"))
+		if m != nil {
+			err := json.Unmarshal(m, &meta)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return meta, err
+	}
+
+	return meta, nil
 }
 
 //RollableString validates a string to see if it is a valid roll expression

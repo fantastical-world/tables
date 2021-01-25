@@ -25,6 +25,7 @@ type Meta struct {
 	Campaign       string   `json:"campaign"`
 	Headers        []string `json:"headers"`
 	ColumnCount    int      `json:"column_count"`
+	RollableTable  bool     `json:"rollable_table"`
 	RollExpression string   `json:"roll_expression"`
 }
 
@@ -39,7 +40,6 @@ type Row struct {
 type Backingstore interface {
 	Prepare() error
 	LoadTable(csvFile string, table string, rollExpression string) error
-	AppendToTable(csvFile string, table string, rollExpression string) error
 	GetTable(table string) ([][]string, error)
 	TableExpression(expression string) ([][]string, error)
 	RandomRow(table string) ([]string, int, error)
@@ -48,4 +48,5 @@ type Backingstore interface {
 	ListTables() ([]string, error)
 	WriteTable(table string, filename string) error
 	Delete(name string) error
+	GetMeta(name string) (Meta, error)
 }
