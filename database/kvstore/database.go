@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"fantastical.world/dice"
@@ -19,6 +20,7 @@ import (
 
 //Database is a simple representation of a table database.
 type Database struct {
+	sync.Mutex
 	dbLocation string
 	timeout    time.Duration
 }
@@ -28,7 +30,7 @@ var _ tables.Backingstore = (*Database)(nil)
 
 //New creates a new Database for persisting and working with tables.
 func New(dbLocation string) (tables.Backingstore, error) {
-	db := Database{dbLocation: dbLocation, timeout: time.Second * 10}
+	db := &Database{dbLocation: dbLocation, timeout: time.Second * 10}
 	err := db.Prepare()
 	if err != nil {
 		return db, err
@@ -38,12 +40,12 @@ func New(dbLocation string) (tables.Backingstore, error) {
 }
 
 //Prepare noop
-func (d Database) Prepare() error {
+func (d *Database) Prepare() error {
 	return nil
 }
 
 //LoadTable will load a table with the CSV data. All existing data in the table will be replaced.
-func (d Database) LoadTable(csvFile string, table string, rollExpression string) error {
+func (d *Database) LoadTable(csvFile string, table string, rollExpression string) error {
 	if rollExpression == "" {
 		return d.loadStandardTable(csvFile, table)
 	}
@@ -51,7 +53,9 @@ func (d Database) LoadTable(csvFile string, table string, rollExpression string)
 	return d.loadRollableTable(csvFile, table, rollExpression)
 }
 
-func (d Database) loadStandardTable(csvFile string, table string) error {
+func (d *Database) loadStandardTable(csvFile string, table string) error {
+	d.Lock()
+	defer d.Unlock()
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
 		return err
@@ -132,7 +136,9 @@ func (d Database) loadStandardTable(csvFile string, table string) error {
 	return nil
 }
 
-func (d Database) loadRollableTable(csvFile string, table string, rollExpression string) error {
+func (d *Database) loadRollableTable(csvFile string, table string, rollExpression string) error {
+	d.Lock()
+	defer d.Unlock()
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
 		return err
@@ -228,7 +234,9 @@ func (d Database) loadRollableTable(csvFile string, table string, rollExpression
 }
 
 //GetTable will return all the table rows
-func (d Database) GetTable(table string) ([][]string, error) {
+func (d *Database) GetTable(table string) ([][]string, error) {
+	d.Lock()
+	defer d.Unlock()
 	var data [][]string
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
@@ -282,7 +290,7 @@ func (d Database) GetTable(table string) ([][]string, error) {
 }
 
 //TableExpression returns table rows based on expression
-func (d Database) TableExpression(expression string) ([][]string, error) {
+func (d *Database) TableExpression(expression string) ([][]string, error) {
 	wantsUnique := false
 	if strings.HasPrefix(expression, "uni:") {
 		wantsUnique = true
@@ -359,10 +367,12 @@ func (d Database) TableExpression(expression string) ([][]string, error) {
 }
 
 //RandomRow returns a random row entry from the specified table and it's roll value.
-func (d Database) RandomRow(table string) ([]string, int, error) {
+func (d *Database) RandomRow(table string) ([]string, int, error) {
+	d.Lock()
 	rollExpression := ""
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
+		d.Unlock()
 		return nil, 0, err
 	}
 	err = db.View(func(tx *bolt.Tx) error {
@@ -388,14 +398,18 @@ func (d Database) RandomRow(table string) ([]string, int, error) {
 	if err != nil {
 		err = db.Close()
 		if err != nil {
+			d.Unlock()
 			return nil, 0, err
 		}
+		d.Unlock()
 		return nil, 0, err
 	}
 	err = db.Close()
 	if err != nil {
+		d.Unlock()
 		return nil, 0, err
 	}
+	d.Unlock()
 
 	_, dieRoll, _ := dice.RollExpression(rollExpression)
 	row, err := d.GetRow(dieRoll, table)
@@ -406,7 +420,9 @@ func (d Database) RandomRow(table string) ([]string, int, error) {
 }
 
 //GetRow returns the row entry from the specified table based on the roll value.
-func (d Database) GetRow(roll int, table string) ([]string, error) {
+func (d *Database) GetRow(roll int, table string) ([]string, error) {
+	d.Lock()
+	defer d.Unlock()
 	var row []string
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
@@ -481,7 +497,9 @@ func (d Database) GetRow(roll int, table string) ([]string, error) {
 }
 
 //GetHeader returns the header of a table
-func (d Database) GetHeader(table string) ([]string, error) {
+func (d *Database) GetHeader(table string) ([]string, error) {
+	d.Lock()
+	defer d.Unlock()
 	var header []string
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
@@ -514,7 +532,9 @@ func (d Database) GetHeader(table string) ([]string, error) {
 }
 
 //ListTables will list all the tables and their metadata.
-func (d Database) ListTables() ([]string, error) {
+func (d *Database) ListTables() ([]string, error) {
+	d.Lock()
+	defer d.Unlock()
 	var tableData []string
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
@@ -543,7 +563,7 @@ func (d Database) ListTables() ([]string, error) {
 }
 
 //WriteTable will write the table to a csv file
-func (d Database) WriteTable(table string, filename string) error {
+func (d *Database) WriteTable(table string, filename string) error {
 	data, err := d.GetTable(table)
 	if err != nil {
 		return err
@@ -557,7 +577,9 @@ func (d Database) WriteTable(table string, filename string) error {
 }
 
 //Delete will delete a table.
-func (d Database) Delete(name string) error {
+func (d *Database) Delete(name string) error {
+	d.Lock()
+	defer d.Unlock()
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
 		return err
@@ -575,7 +597,9 @@ func (d Database) Delete(name string) error {
 }
 
 //GetMeta returns a table's meta data.
-func (d Database) GetMeta(name string) (tables.Meta, error) {
+func (d *Database) GetMeta(name string) (tables.Meta, error) {
+	d.Lock()
+	defer d.Unlock()
 	var meta tables.Meta
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
