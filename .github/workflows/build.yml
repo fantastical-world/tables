@@ -25,7 +25,7 @@ jobs:
         repository: eyeszack/dice
         token: ${{ secrets.GH_PAT }}
         ref: master
-        path: ${{ GOPATH }}/src/dice
+        path: $GOPATH/src/dice
 
     - name: Checkout
       uses: actions/checkout@v2
