@@ -11,12 +11,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout dice project
+      uses: actions/checkout@v2
+      with:
+        repository: eyeszack/dice
+        path: dice
+
+    - name: Checkout
+      uses: actions/checkout@v2
 
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: 1.16
+
+    - name: Go get Boltdb
+      run: go get github.com/boltdb/bolt/...
 
     - name: Build
       run: GO111MODULE=auto go build -v ./...
