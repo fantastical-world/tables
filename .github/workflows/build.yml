@@ -11,17 +11,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout dice project
-      uses: actions/checkout@v2
-      with:
-        repository: eyeszack/dice
-        token: ${{ secrets.GH_PAT }}
-        ref: master
-        path: dice
-
-    - name: Checkout
-      uses: actions/checkout@v2
-
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
@@ -29,6 +18,17 @@ jobs:
 
     - name: Go get Boltdb
       run: go get github.com/boltdb/bolt/...
+
+    - name: Checkout dice project
+      uses: actions/checkout@v2
+      with:
+        repository: eyeszack/dice
+        token: ${{ secrets.GH_PAT }}
+        ref: master
+        path: ${{ GOPATH }}/src/dice
+
+    - name: Checkout
+      uses: actions/checkout@v2
 
     - name: Build
       run: GO111MODULE=auto go build -v ./...
