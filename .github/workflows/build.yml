@@ -1,0 +1,36 @@
+name: Build.
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Go get Boltdb
+      run: go get github.com/boltdb/bolt/...
+      env:
+        GOPATH: /home/runner/work/tables/go
+
+    - name: Checkout dice project
+      uses: actions/checkout@v2
+      with:
+        repository: eyeszack/dice
+        token: ${{ secrets.GH_PAT }}
+        ref: master
+        path: go/src/dice
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: GO111MODULE=auto go build -v ./...
