@@ -31,6 +31,9 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
+      
+    - name: list
+      run: ls -FlAGshp /home/runner/go
 
     - name: Build
       run: GO111MODULE=auto go build -v ./...
