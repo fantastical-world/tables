@@ -27,16 +27,18 @@ jobs:
         repository: eyeszack/dice
         token: ${{ secrets.GH_PAT }}
         ref: master
-        path: go/src/dice
+        path: /home/runner/go/src/dice
 
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        path: /home/runner/go/src/tables
       
     - name: list
       run: |
         ls -FlAGshp /home/runner/go
-        ls -FlAGshp
-        pwd
 
     - name: Build
-      run: GO111MODULE=auto go build -v ./...
+      run: |
+        cd /home/runner/go/src/tables
+        GO111MODULE=auto go build -v ./...
