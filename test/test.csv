@@ -1,0 +1,7 @@
+D6,Result,Description
+1,Fight {{1d1}} rats,The party runs across some dirty rats.
+2,No encounter,Nothing to see here.
+3,A wolf can be heard nearby,If the party is careful they may avoid the wolf.
+4,{{1d1+1}} bats attack,Angry bats swarm and attack the party.
+5,"I can see you, can you see me?",A whisper can be heard in the trees.
+6,A pile of bones covers {{1d1}}GP,You found some loot.

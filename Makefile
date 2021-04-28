@@ -15,7 +15,7 @@ build:
 
 # target: clean - removes artifacts from tests, build, and install
 clean:
-	-rm -rf test
+	-rm -rf results
 	go clean -i
 
 # target: install - builds and installs package for local os/arch
@@ -29,9 +29,9 @@ release: dirty-check clean test install
 
 # target: test - runs tests and generates coverage reports
 test:
-	mkdir -p test
-	go test -cover -coverprofile=test/c.out
-	go tool cover -html=test/c.out -o test/coverage.html
+	mkdir -p results
+	go test ./... -cover -coverprofile=results/c.out -coverpkg ./...
+	go tool cover -html=results/c.out -o results/coverage.html
 
 # target: dirty-check - will check if repo is dirty
 dirty-check:
