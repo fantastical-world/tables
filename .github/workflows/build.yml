@@ -36,6 +36,7 @@ jobs:
       run: |
         ls -FlAGshp /home/runner/go
         ls -FlAGshp
+        pwd
 
     - name: Build
       run: GO111MODULE=auto go build -v ./...
