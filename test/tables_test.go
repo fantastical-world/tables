@@ -164,3 +164,56 @@ func TestTableExpression(t *testing.T) {
 		t.Errorf("unexpected err encountered, %s", err)
 	}
 }
+
+func TestRandomRow(t *testing.T) {
+	db, err := kvstore.New("./test.db")
+	if err != nil {
+		t.Errorf("error was not expected, but err was encountered %s\n", err)
+	}
+
+	err = db.LoadTable("./test.csv", "test", "d6")
+	if err != nil {
+		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
+	}
+
+	results, roll, err := db.RandomRow("test")
+	if err != nil {
+		t.Errorf("error with random row was not expected, but err was encountered %s\n", err)
+	}
+	count := 3 //3 fields
+	if len(results) != count {
+		t.Errorf("expected %d fields, actual fields %d", count, len(results))
+	}
+
+	switch roll {
+	case 1:
+		if (results[0] != "1") || (results[1] != "Fight 1 rats") || (results[2] != "The party runs across some dirty rats.") {
+			t.Errorf("expected heard to contain [1][Fight 1 rats][The party runs across some dirty rats.], actual values [%s][%s][%s]", results[0], results[1], results[2])
+		}
+	case 2:
+		if (results[0] != "2") || (results[1] != "No encounter") || (results[2] != "Nothing to see here.") {
+			t.Errorf("expected heard to contain [2][No encounter][Nothing to see here.], actual values [%s][%s][%s]", results[0], results[1], results[2])
+		}
+	case 3:
+		if (results[0] != "3") || (results[1] != "A wolf can be heard nearby") || (results[2] != "If the party is careful they may avoid the wolf.") {
+			t.Errorf("expected heard to contain [3][A wolf can be heard nearby][If the party is careful they may avoid the wolf.], actual values [%s][%s][%s]", results[0], results[1], results[2])
+		}
+	case 4:
+		if (results[0] != "4") || (results[1] != "2 bats attack") || (results[2] != "Angry bats swarm and attack the party.") {
+			t.Errorf("expected heard to contain [4][2 bats attack][Angry bats swarm and attack the party.], actual values [%s][%s][%s]", results[0], results[1], results[2])
+		}
+	case 5:
+		if (results[0] != "5") || (results[1] != "I can see you, can you see me?") || (results[2] != "A whisper can be heard in the trees.") {
+			t.Errorf("expected heard to contain [5][I can see you, can you see me?][A whisper can be heard in the trees.], actual values [%s][%s][%s]", results[0], results[1], results[2])
+		}
+	case 6:
+		if (results[0] != "6") || (results[1] != "A pile of bones covers 1GP") || (results[2] != "You found some loot.") {
+			t.Errorf("expected heard to contain [6][A pile of bones covers 1GP][You found some loot.], actual values [%s][%s][%s]", results[0], results[1], results[2])
+		}
+	}
+
+	err = os.Remove("./test.db")
+	if err != nil {
+		t.Errorf("unexpected err encountered, %s", err)
+	}
+}
