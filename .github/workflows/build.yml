@@ -19,7 +19,7 @@ jobs:
     - name: Go get Boltdb
       run: go get github.com/boltdb/bolt/...
       env:
-        GOPATH: /home/runner/work/tables/go
+        GOPATH: /home/runner/go
 
     - name: Checkout dice project
       uses: actions/checkout@v2
