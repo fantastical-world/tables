@@ -397,10 +397,10 @@ func (d *Database) RandomRow(table string) ([]string, int, error) {
 		return nil
 	})
 	if err != nil {
-		err = db.Close()
-		if err != nil {
+		errC := db.Close()
+		if errC != nil {
 			d.Unlock()
-			return nil, 0, err
+			return nil, 0, errC
 		}
 		d.Unlock()
 		return nil, 0, err
