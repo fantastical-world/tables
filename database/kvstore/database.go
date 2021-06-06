@@ -59,10 +59,8 @@ func (d *Database) loadStandardTable(csvFile string, table string) error {
 
 		b := tx.Bucket([]byte(table))
 		if b != nil {
-			err = tx.DeleteBucket([]byte(table))
-			if err != nil {
-				return err
-			}
+			//should not need to worry about error since we are in here if a bucket exists
+			_ = tx.DeleteBucket([]byte(table))
 		}
 
 		b, err = tx.CreateBucket([]byte(table))
@@ -92,10 +90,7 @@ func (d *Database) loadStandardTable(csvFile string, table string) error {
 
 			//for standard tables we don't have a "dieRoll", but we do use the row number here for sorting purposes.
 			row := tables.Row{DieRoll: i, RollRange: "", Results: line}
-			encodedRow, err := json.Marshal(row)
-			if err != nil {
-				return err
-			}
+			encodedRow, _ := json.Marshal(row)
 
 			err = b.Put([]byte(line[0]), encodedRow)
 			if err != nil {
@@ -140,10 +135,8 @@ func (d *Database) loadRollableTable(csvFile string, table string, rollExpressio
 
 		b := tx.Bucket([]byte(table))
 		if b != nil {
-			err = tx.DeleteBucket([]byte(table))
-			if err != nil {
-				return err
-			}
+			//should not need to worry about error since we are in here if a bucket exists
+			_ = tx.DeleteBucket([]byte(table))
 		}
 
 		b, err = tx.CreateBucket([]byte(table))

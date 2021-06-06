@@ -727,6 +727,31 @@ func TestErrors(t *testing.T) {
 		}
 	}
 
+	err = db.Delete("IDONTEXIST")
+	if err == nil {
+		t.Errorf("expected an err, but none occured\n")
+	}
+
+	err = db.LoadTable("IDONTEXIST.csv", "test-csv-not-there", "") //no re so standard
+	if err == nil {
+		t.Errorf("expected an err, but none occured\n")
+	}
+
+	err = db.LoadTable("IDONTEXIST.csv", "test-csv-not-there", "2d8") //re so advanced
+	if err == nil {
+		t.Errorf("expected an err, but none occured\n")
+	}
+
+	err = db.LoadTable("./../../test-data/test.csv", "", "") //no re so standard
+	if err == nil {
+		t.Errorf("expected an err, but none occured\n")
+	}
+
+	err = db.LoadTable("./../../test-data/test.csv", "", "2d8") //re so advanced
+	if err == nil {
+		t.Errorf("expected an err, but none occured\n")
+	}
+
 	err = db.LoadTable("./../../test-data/bad.csv", "bad", "d3")
 	if err == nil {
 		t.Errorf("expected an err, but none occured\n")
@@ -821,6 +846,55 @@ func TestErrors(t *testing.T) {
 	err = os.Remove("./test.db")
 	if err != nil {
 		t.Errorf("unexpected err encountered, %s", err)
+	}
+}
+
+func TestBadDatabaseErrors(t *testing.T) {
+	db := New("./../../test-data/bad.db")
+
+	_, err := db.GetHeader("heyo")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	_, err = db.GetMeta("heyo")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	_, err = db.GetRow(3, "test")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	_, err = db.GetTable("test")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	_, err = db.ListTables()
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	_, err = db.TableExpression("2?test")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	err = db.Delete("test")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	err = db.LoadTable("csv", "test", "")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	err = db.LoadTable("csv", "test", "1d6")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	err = db.WriteTable("test", "./../../test-data/deleteme.csv")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	_, _, err = db.RandomRow("test")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
 	}
 }
 
