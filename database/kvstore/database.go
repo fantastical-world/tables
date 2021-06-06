@@ -76,9 +76,7 @@ func (d *Database) loadStandardTable(csvFile string, table string) error {
 		for i, line := range records {
 
 			if i == 0 {
-				for _, header := range line {
-					headers = append(headers, header)
-				}
+				headers = append(headers, line...)
 				continue
 			}
 
@@ -159,9 +157,7 @@ func (d *Database) loadRollableTable(csvFile string, table string, rollExpressio
 		for i, line := range records {
 
 			if i == 0 {
-				for _, header := range line {
-					headers = append(headers, header)
-				}
+				headers = append(headers, line...)
 				continue
 			}
 
