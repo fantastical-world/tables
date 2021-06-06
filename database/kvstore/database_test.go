@@ -1,6 +1,7 @@
 package kvstore
 
 import (
+	"encoding/csv"
 	"os"
 	"testing"
 )
@@ -1137,4 +1138,20 @@ func contains(s []string, str string) bool {
 	}
 
 	return false
+}
+
+func readCSV(filename string) ([][]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	r := csv.NewReader(f)
+
+	records, err := r.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }

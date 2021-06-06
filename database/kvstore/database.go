@@ -607,22 +607,6 @@ func RollableString(value string) bool {
 	return re.MatchString(value)
 }
 
-func readCSV(filename string) ([][]string, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	r := csv.NewReader(f)
-
-	records, err := r.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	return records, nil
-}
-
 func writeCSV(filename string, data [][]string) error {
 	f, err := os.Create(filename)
 	if err != nil {
