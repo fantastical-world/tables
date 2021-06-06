@@ -5,11 +5,11 @@ import (
 	"testing"
 )
 
-func TestNewDatabase(t *testing.T) {
+func Test_New(t *testing.T) {
 	_ = New("./test.db")
 }
 
-func TestLoadTable(t *testing.T) {
+func TestDatabase_LoadTable(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -28,7 +28,7 @@ func TestLoadTable(t *testing.T) {
 	}
 }
 
-func TestGetTable(t *testing.T) {
+func TestDatabase_GetTable(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -87,7 +87,7 @@ func TestGetTable(t *testing.T) {
 	}
 }
 
-func TestTableExpression(t *testing.T) {
+func TestDatabase_TableExpression(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -203,7 +203,7 @@ func TestTableExpression(t *testing.T) {
 	}
 }
 
-func TestRandomRow(t *testing.T) {
+func TestDatabase_RandomRow(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -253,7 +253,7 @@ func TestRandomRow(t *testing.T) {
 	}
 }
 
-func TestGetRow(t *testing.T) {
+func TestDatabase_GetRow(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -334,7 +334,7 @@ func TestGetRow(t *testing.T) {
 	}
 }
 
-func TestRangedRows(t *testing.T) {
+func TestDatabase_RandomRow_withRanges(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test-ranged.csv", "test", "d6")
@@ -384,7 +384,7 @@ func TestRangedRows(t *testing.T) {
 	}
 }
 
-func TestGetHeader(t *testing.T) {
+func TestDatabase_GetHeader(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -411,7 +411,7 @@ func TestGetHeader(t *testing.T) {
 	}
 }
 
-func TestListTables(t *testing.T) {
+func TestDatabase_ListTables(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -443,7 +443,7 @@ func TestListTables(t *testing.T) {
 	}
 }
 
-func TestWriteTable(t *testing.T) {
+func TestDatabase_WriteTable(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -539,7 +539,7 @@ func TestWriteTable(t *testing.T) {
 	}
 }
 
-func TestDeleteTable(t *testing.T) {
+func TestDatabase_DeleteTable(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -589,7 +589,7 @@ func TestDeleteTable(t *testing.T) {
 	}
 }
 
-func TestGetMeta(t *testing.T) {
+func TestDatabase_GetMeta(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -623,7 +623,7 @@ func TestGetMeta(t *testing.T) {
 	}
 }
 
-func TestReplacingTables(t *testing.T) {
+func TestDatabase_LoadTable_replace(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
@@ -678,7 +678,7 @@ func TestReplacingTables(t *testing.T) {
 	}
 }
 
-func TestReplacingTablesStandard(t *testing.T) {
+func TestDatabase_LoadTable_replaceStandard(t *testing.T) {
 	db := New("./test.db")
 
 	err := db.LoadTable("./../../test-data/test.csv", "test", "")
@@ -821,6 +821,148 @@ func TestErrors(t *testing.T) {
 	err = os.Remove("./test.db")
 	if err != nil {
 		t.Errorf("unexpected err encountered, %s", err)
+	}
+}
+
+func Test_rollString(t *testing.T) {
+	testCases := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{
+			name:  "validate value returned is the same if there is no roll expession...",
+			value: "Hi i do not have a roll expresssion.",
+			want:  "Hi i do not have a roll expresssion.",
+		},
+		{
+			name:  "validate value is returned with all roll expressions replaced with roll results...",
+			value: "I should be {{2d1+3}} and {{1d1+2}}.",
+			want:  "I should be 5 and 3.",
+		},
+		{
+			name:  "validate value is returned with the roll expression replaced with roll result...",
+			value: "I should be {{3d1-1}}.",
+			want:  "I should be 2.",
+		},
+		{
+			name:  "validate value is returned is the same if roll expression is invalid...",
+			value: "I should be {{2dB++3}}.",
+			want:  "I should be {{2dB++3}}.",
+		},
+		{
+			name:  "validate value is returned with results for as many valid roll expressions found...",
+			value: "I should be {{2dB++3}} and {{1d1+2}} and {{4d1+2}}.",
+			want:  "I should be {{2dB++3}} and 3 and 6.",
+		},
+	}
+
+	for _, test := range testCases {
+		got := rollString(test.value)
+
+		if got != test.want {
+			t.Errorf("want %s, got %s", test.want, got)
+		}
+	}
+}
+
+func Test_rangedRoll(t *testing.T) {
+	testCases := []struct {
+		name  string
+		value string
+		want  bool
+	}{
+		{
+			name:  "validate true is returned if value is a range...",
+			value: "1-4",
+			want:  true,
+		},
+		{
+			name:  "validate false is returned if value has too many dashes...",
+			value: "1-4-8-9",
+			want:  false,
+		},
+		{
+			name:  "validate false is returned if value has non-numerics in first place...",
+			value: "A-4",
+			want:  false,
+		},
+		{
+			name:  "validate false is returned if value has non-numerics in second place...",
+			value: "6-B",
+			want:  false,
+		},
+		{
+			name:  "validate false is returned if value has non-numerics in both places...",
+			value: "A-B",
+			want:  false,
+		},
+		{
+			name:  "validate false is returned if value is not a range...",
+			value: "8",
+			want:  false,
+		},
+		{
+			name:  "validate false is returned if value is invalid...",
+			value: "Not even close",
+			want:  false,
+		},
+	}
+
+	for _, test := range testCases {
+		got := rangedRoll(test.value)
+
+		if got != test.want {
+			t.Errorf("want %t, got %t", test.want, got)
+		}
+	}
+}
+
+func Test_rangeInRoll(t *testing.T) {
+	testCases := []struct {
+		name      string
+		roll      int
+		rollRange string
+		want      bool
+	}{
+		{
+			name:      "validate true is returned if roll is in range...",
+			roll:      3,
+			rollRange: "1-4",
+			want:      true,
+		},
+		{
+			name:      "validate true is returned if roll is at start...",
+			roll:      6,
+			rollRange: "6-10",
+			want:      true,
+		},
+		{
+			name:      "validate true is returned if roll is at end...",
+			roll:      8,
+			rollRange: "2-8",
+			want:      true,
+		},
+		{
+			name:      "validate false is returned if roll is not in range...",
+			roll:      8,
+			rollRange: "1-4",
+			want:      false,
+		},
+		{
+			name:      "validate false is returned if roll range is not a range...",
+			roll:      8,
+			rollRange: "8",
+			want:      false,
+		},
+	}
+
+	for _, test := range testCases {
+		got := rollInRange(test.roll, test.rollRange)
+
+		if got != test.want {
+			t.Errorf("want %t, got %t", test.want, got)
+		}
 	}
 }
 

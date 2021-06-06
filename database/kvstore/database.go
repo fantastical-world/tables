@@ -668,10 +668,7 @@ func rollString(value string) string {
 	for _, m := range match {
 		expression := strings.ReplaceAll(m[0], "{{", "")
 		expression = strings.ReplaceAll(expression, "}}", "")
-		_, sum, err := dice.RollExpression(strings.Trim(expression, " "))
-		if err != nil {
-			return value
-		}
+		_, sum, _ := dice.RollExpression(strings.Trim(expression, " "))
 		rolledValue = strings.Replace(rolledValue, m[0], strconv.Itoa(sum), 1)
 	}
 
@@ -694,11 +691,7 @@ func rangedRoll(value string) bool {
 	}
 
 	_, err = strconv.Atoi(parts[1])
-	if err != nil {
-		return false
-	}
-
-	return true
+	return err == nil
 }
 
 func rollInRange(value int, rollRange string) bool {
