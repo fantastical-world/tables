@@ -496,7 +496,13 @@ func TestDatabase_WriteTable(t *testing.T) {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
 
-	err = db.WriteTable("test", "./../../test-data/write.csv")
+	records = nil
+	records, err = db.GetTable("test")
+	if err != nil {
+		t.Errorf("unexpected err encountered, %s", err)
+	}
+
+	err = writeCSV("./../../test-data/write.csv", records)
 	if err != nil {
 		t.Errorf("unexpected err encountered, %s", err)
 	}
@@ -978,10 +984,6 @@ func TestBadDatabaseErrors(t *testing.T) {
 	if err == nil {
 		t.Error("expected an error, but none encountered\n")
 	}
-	err = db.WriteTable("test", "./../../test-data/deleteme.csv")
-	if err == nil {
-		t.Error("expected an error, but none encountered\n")
-	}
 	_, _, err = db.RandomRow("test")
 	if err == nil {
 		t.Error("expected an error, but none encountered\n")
@@ -1154,4 +1156,20 @@ func readCSV(filename string) ([][]string, error) {
 	}
 
 	return records, nil
+}
+
+func writeCSV(filename string, data [][]string) error {
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w := csv.NewWriter(f)
+
+	err = w.WriteAll(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

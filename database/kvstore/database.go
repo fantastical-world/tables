@@ -1,11 +1,9 @@
 package kvstore
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -531,20 +529,6 @@ func (d *Database) ListTables() ([]string, error) {
 	return tableData, nil
 }
 
-//WriteTable will write the table to a csv file
-func (d *Database) WriteTable(table string, filename string) error {
-	data, err := d.GetTable(table)
-	if err != nil {
-		return err
-	}
-	err = writeCSV(filename, data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 //Delete will delete a table.
 func (d *Database) Delete(name string) error {
 	d.Lock()
@@ -605,22 +589,6 @@ func (d *Database) GetMeta(name string) (tables.Meta, error) {
 func RollableString(value string) bool {
 	re := regexp.MustCompile(`{{\s*(?P<num>[0-9]*)[d](?P<sides>[0-9]+)(?P<mod>\+|-)?(?P<mod_num>[0-9]+)?\s*}}`)
 	return re.MatchString(value)
-}
-
-func writeCSV(filename string, data [][]string) error {
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	w := csv.NewWriter(f)
-
-	err = w.WriteAll(data)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func rollString(value string) string {

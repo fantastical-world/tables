@@ -45,7 +45,6 @@ type Backingstore interface {
 	GetRow(roll int, table string) ([]string, error)
 	GetHeader(table string) ([]string, error)
 	ListTables() ([]string, error)
-	WriteTable(table string, filename string) error
 	Delete(name string) error
 	GetMeta(name string) (Meta, error)
 }
