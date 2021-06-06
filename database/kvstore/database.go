@@ -571,8 +571,11 @@ func (d *Database) Delete(name string) error {
 		return err
 	}
 	defer db.Close()
-	db.Update(func(tx *bolt.Tx) error {
-		tx.DeleteBucket([]byte(name))
+	err = db.Update(func(tx *bolt.Tx) error {
+		err = tx.DeleteBucket([]byte(name))
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 	if err != nil {
