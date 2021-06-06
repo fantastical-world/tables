@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	"dice"
-	"tables"
+	"github.com/fantastical-world/dice"
+	"github.com/fantastical-world/tables"
 
 	"github.com/boltdb/bolt"
 )

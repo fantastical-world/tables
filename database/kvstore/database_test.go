@@ -1,21 +1,19 @@
-package test
+package kvstore
 
 import (
 	"os"
 	"testing"
-
-	"tables/database/kvstore"
 )
 
 func TestNewDatabase(t *testing.T) {
-	_, err := kvstore.New("./test.db")
+	_, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
 }
 
 func TestLoadTable(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -37,7 +35,7 @@ func TestLoadTable(t *testing.T) {
 }
 
 func TestGetTable(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -99,7 +97,7 @@ func TestGetTable(t *testing.T) {
 }
 
 func TestTableExpression(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -218,7 +216,7 @@ func TestTableExpression(t *testing.T) {
 }
 
 func TestRandomRow(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -271,7 +269,7 @@ func TestRandomRow(t *testing.T) {
 }
 
 func TestGetRow(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -355,7 +353,7 @@ func TestGetRow(t *testing.T) {
 }
 
 func TestRangedRows(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -408,7 +406,7 @@ func TestRangedRows(t *testing.T) {
 }
 
 func TestGetHeader(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -438,7 +436,7 @@ func TestGetHeader(t *testing.T) {
 }
 
 func TestListTables(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -473,7 +471,7 @@ func TestListTables(t *testing.T) {
 }
 
 func TestWriteTable(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -572,7 +570,7 @@ func TestWriteTable(t *testing.T) {
 }
 
 func TestDeleteTable(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -625,7 +623,7 @@ func TestDeleteTable(t *testing.T) {
 }
 
 func TestGetMeta(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -662,7 +660,7 @@ func TestGetMeta(t *testing.T) {
 }
 
 func TestReplacingTables(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -720,7 +718,7 @@ func TestReplacingTables(t *testing.T) {
 }
 
 func TestReplacingTablesStandard(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -760,7 +758,7 @@ func TestReplacingTablesStandard(t *testing.T) {
 }
 
 func TestErrors(t *testing.T) {
-	db, err := kvstore.New("./test.db")
+	db, err := New("./test.db")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
