@@ -6,20 +6,13 @@ import (
 )
 
 func TestNewDatabase(t *testing.T) {
-	_, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
-	//no need to remove at this point since file is not created in New()
+	_ = New("./test.db")
 }
 
 func TestLoadTable(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -36,12 +29,9 @@ func TestLoadTable(t *testing.T) {
 }
 
 func TestGetTable(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -98,12 +88,9 @@ func TestGetTable(t *testing.T) {
 }
 
 func TestTableExpression(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -217,12 +204,9 @@ func TestTableExpression(t *testing.T) {
 }
 
 func TestRandomRow(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -270,12 +254,9 @@ func TestRandomRow(t *testing.T) {
 }
 
 func TestGetRow(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -354,12 +335,9 @@ func TestGetRow(t *testing.T) {
 }
 
 func TestRangedRows(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test-ranged.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test-ranged.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -407,12 +385,9 @@ func TestRangedRows(t *testing.T) {
 }
 
 func TestGetHeader(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -437,12 +412,9 @@ func TestGetHeader(t *testing.T) {
 }
 
 func TestListTables(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -472,12 +444,9 @@ func TestListTables(t *testing.T) {
 }
 
 func TestWriteTable(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -571,12 +540,9 @@ func TestWriteTable(t *testing.T) {
 }
 
 func TestDeleteTable(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -624,12 +590,9 @@ func TestDeleteTable(t *testing.T) {
 }
 
 func TestGetMeta(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -661,12 +624,9 @@ func TestGetMeta(t *testing.T) {
 }
 
 func TestReplacingTables(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "d6")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -719,12 +679,9 @@ func TestReplacingTables(t *testing.T) {
 }
 
 func TestReplacingTablesStandard(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	err = db.LoadTable("./../../test-data/test.csv", "test", "")
+	err := db.LoadTable("./../../test-data/test.csv", "test", "")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -759,12 +716,9 @@ func TestReplacingTablesStandard(t *testing.T) {
 }
 
 func TestErrors(t *testing.T) {
-	db, err := New("./test.db")
-	if err != nil {
-		t.Errorf("error was not expected, but err was encountered %s\n", err)
-	}
+	db := New("./test.db")
 
-	_, err = db.GetTable("nope")
+	_, err := db.GetTable("nope")
 	if err == nil {
 		t.Errorf("expected an err, but none occured\n")
 	} else {

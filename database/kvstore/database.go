@@ -30,19 +30,8 @@ type Database struct {
 var _ tables.Backingstore = (*Database)(nil)
 
 //New creates a new Database for persisting and working with tables.
-func New(dbLocation string) (tables.Backingstore, error) {
-	db := &Database{dbLocation: dbLocation, timeout: time.Second * 10}
-	err := db.Prepare()
-	if err != nil {
-		return db, err
-	}
-
-	return db, nil
-}
-
-//Prepare noop
-func (d *Database) Prepare() error {
-	return nil
+func New(dbLocation string) tables.Backingstore {
+	return &Database{dbLocation: dbLocation, timeout: time.Second * 10}
 }
 
 //LoadTable will load a table with the CSV data. All existing data in the table will be replaced.
