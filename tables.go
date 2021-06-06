@@ -38,7 +38,7 @@ type Row struct {
 
 //Backingstore represents a general contract needed for persisting tables.
 type Backingstore interface {
-	LoadTable(csvFile string, table string, rollExpression string) error
+	LoadTable(records [][]string, table string, rollExpression string) error
 	GetTable(table string) ([][]string, error)
 	TableExpression(expression string) ([][]string, error)
 	RandomRow(table string) ([]string, int, error)

@@ -35,15 +35,15 @@ func New(dbLocation string) tables.Backingstore {
 }
 
 //LoadTable will load a table with the CSV data. All existing data in the table will be replaced.
-func (d *Database) LoadTable(csvFile string, table string, rollExpression string) error {
+func (d *Database) LoadTable(records [][]string, table string, rollExpression string) error {
 	if rollExpression == "" {
-		return d.loadStandardTable(csvFile, table)
+		return d.loadStandardTable(records, table)
 	}
 
-	return d.loadRollableTable(csvFile, table, rollExpression)
+	return d.loadRollableTable(records, table, rollExpression)
 }
 
-func (d *Database) loadStandardTable(csvFile string, table string) error {
+func (d *Database) loadStandardTable(records [][]string, table string) error {
 	d.Lock()
 	defer d.Unlock()
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
@@ -52,11 +52,6 @@ func (d *Database) loadStandardTable(csvFile string, table string) error {
 	}
 	defer db.Close()
 	err = db.Update(func(tx *bolt.Tx) error {
-		records, err := readCSV(csvFile)
-		if err != nil {
-			return err
-		}
-
 		b := tx.Bucket([]byte(table))
 		if b != nil {
 			//should not need to worry about error since we are in here if a bucket exists
@@ -119,7 +114,7 @@ func (d *Database) loadStandardTable(csvFile string, table string) error {
 	return nil
 }
 
-func (d *Database) loadRollableTable(csvFile string, table string, rollExpression string) error {
+func (d *Database) loadRollableTable(records [][]string, table string, rollExpression string) error {
 	d.Lock()
 	defer d.Unlock()
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
@@ -128,11 +123,6 @@ func (d *Database) loadRollableTable(csvFile string, table string, rollExpressio
 	}
 	defer db.Close()
 	err = db.Update(func(tx *bolt.Tx) error {
-		records, err := readCSV(csvFile)
-		if err != nil {
-			return err
-		}
-
 		b := tx.Bucket([]byte(table))
 		if b != nil {
 			//should not need to worry about error since we are in here if a bucket exists
