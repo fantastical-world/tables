@@ -97,10 +97,7 @@ func (d *Database) LoadTable(records [][]string, table string, rollExpression st
 		}
 
 		meta := tables.Meta{Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: rollable, RollExpression: rollExpression}
-		encoded, err := json.Marshal(meta)
-		if err != nil {
-			return err
-		}
+		encoded, _ := json.Marshal(meta)
 
 		err = b.Put([]byte("tables.meta"), encoded)
 		if err != nil {
