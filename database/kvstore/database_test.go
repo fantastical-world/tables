@@ -936,11 +936,13 @@ func Test_rollString(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		got := rollString(test.value)
+		t.Run(test.name, func(t *testing.T) {
+			got := rollString(test.value)
 
-		if got != test.want {
-			t.Errorf("want %s, got %s", test.want, got)
-		}
+			if got != test.want {
+				t.Errorf("want %s, got %s", test.want, got)
+			}
+		})
 	}
 }
 
@@ -988,11 +990,13 @@ func Test_rangedRoll(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		got := rangedRoll(test.value)
+		t.Run(test.name, func(t *testing.T) {
+			got := rangedRoll(test.value)
 
-		if got != test.want {
-			t.Errorf("want %t, got %t", test.want, got)
-		}
+			if got != test.want {
+				t.Errorf("want %t, got %t", test.want, got)
+			}
+		})
 	}
 }
 
@@ -1036,11 +1040,13 @@ func Test_rangeInRoll(t *testing.T) {
 	}
 
 	for _, test := range testCases {
-		got := rollInRange(test.roll, test.rollRange)
+		t.Run(test.name, func(t *testing.T) {
+			got := rollInRange(test.roll, test.rollRange)
 
-		if got != test.want {
-			t.Errorf("want %t, got %t", test.want, got)
-		}
+			if got != test.want {
+				t.Errorf("want %t, got %t", test.want, got)
+			}
+		})
 	}
 }
 
