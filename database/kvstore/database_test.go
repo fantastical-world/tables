@@ -1,10 +1,33 @@
 package kvstore
 
 import (
-	"encoding/csv"
 	"os"
 	"testing"
 )
+
+var testCSV = [][]string{
+	{"D6", "Result", "Description"},
+	{"1", "Fight {{1d1}} rats", "The party runs across some dirty rats."},
+	{"2", "No encounter", "Nothing to see here."},
+	{"3", "A wolf can be heard nearby", "If the party is careful they may avoid the wolf."},
+	{"4", "{{1d1+1}} bats attack", "Angry bats swarm and attack the party."},
+	{"5", "I can see you, can you see me?", "A whisper can be heard in the trees."},
+	{"6", "A pile of bones covers {{1d1}}GP", "You found some loot."},
+}
+
+var rangedCSV = [][]string{
+	{"D6", "Result"},
+	{"1-2", "You rolled a 1 or 2"},
+	{"3-4", "You rolled a 3 or 4"},
+	{"5-6", "You rolled a 5 or 6"},
+}
+
+var badCSV = [][]string{
+	{"D3", "Result", "Description"},
+	{"A", "Fight {{1d1}} rats", "The party runs across some dirty rats."},
+	{"2:8", "No encounter", "Nothing to see here."},
+	{"3", "A wolf can be heard nearby", "If the party is careful they may avoid the wolf."},
+}
 
 func Test_New(t *testing.T) {
 	_ = New("./test.db")
@@ -13,16 +36,11 @@ func Test_New(t *testing.T) {
 func TestDatabase_LoadTable(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6") //advanced because of re
+	err := db.LoadTable(testCSV, "test", "d6") //advanced because of re
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
-	err = db.LoadTable(records, "test2", "") //standard because no re
+	err = db.LoadTable(testCSV, "test2", "") //standard because no re
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -36,12 +54,7 @@ func TestDatabase_LoadTable(t *testing.T) {
 func TestDatabase_GetTable(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -100,12 +113,7 @@ func TestDatabase_GetTable(t *testing.T) {
 func TestDatabase_TableExpression(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -221,12 +229,7 @@ func TestDatabase_TableExpression(t *testing.T) {
 func TestDatabase_RandomRow(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -276,12 +279,7 @@ func TestDatabase_RandomRow(t *testing.T) {
 func TestDatabase_GetRow(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -362,12 +360,7 @@ func TestDatabase_GetRow(t *testing.T) {
 func TestDatabase_RandomRow_withRanges(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test-ranged.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(rangedCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -417,12 +410,7 @@ func TestDatabase_RandomRow_withRanges(t *testing.T) {
 func TestDatabase_GetHeader(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -449,17 +437,12 @@ func TestDatabase_GetHeader(t *testing.T) {
 func TestDatabase_ListTables(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
 
-	err = db.LoadTable(records, "test2", "")
+	err = db.LoadTable(testCSV, "test2", "")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -486,31 +469,14 @@ func TestDatabase_ListTables(t *testing.T) {
 func TestDatabase_WriteTable(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
 
-	records = nil
-	records, err = db.GetTable("test")
+	records, err := db.GetTable("test")
 	if err != nil {
 		t.Errorf("unexpected err encountered, %s", err)
-	}
-
-	err = writeCSV("./../../test-data/write.csv", records)
-	if err != nil {
-		t.Errorf("unexpected err encountered, %s", err)
-	}
-
-	records = nil
-	records, err = readCSV("./../../test-data/write.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
 	}
 
 	err = db.LoadTable(records, "write", "d6")
@@ -585,11 +551,6 @@ func TestDatabase_WriteTable(t *testing.T) {
 		t.Errorf("expected heard to contain [6][A pile of bones covers 1GP][You found some loot.], actual values [%s][%s][%s]", results[0], results[1], results[2])
 	}
 
-	err = os.Remove("./../../test-data/write.csv")
-	if err != nil {
-		t.Errorf("unexpected err encountered, %s", err)
-	}
-
 	err = os.Remove("./test.db")
 	if err != nil {
 		t.Errorf("unexpected err encountered, %s", err)
@@ -599,17 +560,12 @@ func TestDatabase_WriteTable(t *testing.T) {
 func TestDatabase_DeleteTable(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
 
-	err = db.LoadTable(records, "test2", "")
+	err = db.LoadTable(testCSV, "test2", "")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -654,17 +610,12 @@ func TestDatabase_DeleteTable(t *testing.T) {
 func TestDatabase_GetMeta(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error loading table was not expected, but err was encountered %s\n", err)
 	}
 
-	err = db.LoadTable(records, "test2", "")
+	err = db.LoadTable(testCSV, "test2", "")
 	if err != nil {
 		t.Errorf("error was not expected, but err was encountered %s\n", err)
 	}
@@ -693,23 +644,12 @@ func TestDatabase_GetMeta(t *testing.T) {
 func TestDatabase_LoadTable_replace(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err := db.LoadTable(testCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
 
-	records = nil
-	records, err = readCSV("./../../test-data/test-ranged.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "d6")
+	err = db.LoadTable(rangedCSV, "test", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -759,12 +699,7 @@ func TestDatabase_LoadTable_replace(t *testing.T) {
 func TestDatabase_LoadTable_replaceStandard(t *testing.T) {
 	db := New("./test.db")
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "")
+	err := db.LoadTable(testCSV, "test", "")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -778,13 +713,7 @@ func TestDatabase_LoadTable_replaceStandard(t *testing.T) {
 		t.Errorf("expected %d rows, actual rows %d", count, len(results))
 	}
 
-	records = nil
-	records, err = readCSV("./../../test-data/test-ranged.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "test", "")
+	err = db.LoadTable(rangedCSV, "test", "")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -821,28 +750,17 @@ func TestErrors(t *testing.T) {
 		t.Errorf("expected an err, but none occured\n")
 	}
 
-	records, err := readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "", "") //no re so standard
+	err = db.LoadTable(testCSV, "", "") //no re so standard
 	if err == nil {
 		t.Errorf("expected an err, but none occured\n")
 	}
 
-	err = db.LoadTable(records, "", "2d8") //re so advanced
+	err = db.LoadTable(testCSV, "", "2d8") //re so advanced
 	if err == nil {
 		t.Errorf("expected an err, but none occured\n")
 	}
 
-	records = nil
-	records, err = readCSV("./../../test-data/bad.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "bad", "d3")
+	err = db.LoadTable(badCSV, "bad", "d3")
 	if err == nil {
 		t.Errorf("expected an err, but none occured\n")
 	} else {
@@ -869,13 +787,7 @@ func TestErrors(t *testing.T) {
 		}
 	}
 
-	records = nil
-	records, err = readCSV("./../../test-data/test.csv")
-	if err != nil {
-		t.Errorf("error reading csv was not expected, but err was encountered %s\n", err)
-	}
-
-	err = db.LoadTable(records, "testnoroll", "")
+	err = db.LoadTable(testCSV, "testnoroll", "")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -907,7 +819,7 @@ func TestErrors(t *testing.T) {
 		}
 	}
 
-	err = db.LoadTable(records, "testgood", "d6")
+	err = db.LoadTable(testCSV, "testgood", "d6")
 	if err != nil {
 		t.Errorf("error while loading table was not expected, but err was encountered %s\n", err)
 	}
@@ -946,7 +858,7 @@ func TestErrors(t *testing.T) {
 }
 
 func TestBadDatabaseErrors(t *testing.T) {
-	db := New("./../../test-data/bad.db")
+	db := New("./bad.db")
 
 	_, err := db.GetHeader("heyo")
 	if err == nil {
@@ -1140,36 +1052,4 @@ func contains(s []string, str string) bool {
 	}
 
 	return false
-}
-
-func readCSV(filename string) ([][]string, error) {
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	r := csv.NewReader(f)
-
-	records, err := r.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	return records, nil
-}
-
-func writeCSV(filename string, data [][]string) error {
-	f, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	w := csv.NewWriter(f)
-
-	err = w.WriteAll(data)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
