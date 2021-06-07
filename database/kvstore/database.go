@@ -62,8 +62,6 @@ func (d *Database) loadStandardTable(records [][]string, table string) error {
 		}
 
 		var headers []string
-		tableType := tables.Simple
-
 		for i, line := range records {
 
 			if i == 0 {
@@ -72,14 +70,10 @@ func (d *Database) loadStandardTable(records [][]string, table string) error {
 			}
 
 			hasRollExpression := false
-			//check looks odd but once we find a row with at least one rollable string we won't bother checking the remainder
-			if tableType != tables.Advanced {
-				for _, value := range line {
-					if RollableString(value) {
-						hasRollExpression = true
-						tableType = tables.Advanced
-						break
-					}
+			for _, value := range line {
+				if RollableString(value) {
+					hasRollExpression = true
+					break
 				}
 			}
 
@@ -93,7 +87,7 @@ func (d *Database) loadStandardTable(records [][]string, table string) error {
 			}
 		}
 
-		meta := tables.Meta{Type: tableType, Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: false, RollExpression: ""}
+		meta := tables.Meta{Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: false, RollExpression: ""}
 		encoded, err := json.Marshal(meta)
 		if err != nil {
 			return err
@@ -135,8 +129,6 @@ func (d *Database) loadRollableTable(records [][]string, table string, rollExpre
 		}
 
 		var headers []string
-		tableType := tables.Simple
-
 		for i, line := range records {
 
 			if i == 0 {
@@ -161,13 +153,10 @@ func (d *Database) loadRollableTable(records [][]string, table string, rollExpre
 
 			hasRollExpression := false
 			//check looks odd but once we find a row with at least one rollable string we won't bother checking the remainder
-			if tableType != tables.Advanced {
-				for _, value := range line {
-					if RollableString(value) {
-						hasRollExpression = true
-						tableType = tables.Advanced
-						break
-					}
+			for _, value := range line {
+				if RollableString(value) {
+					hasRollExpression = true
+					break
 				}
 			}
 
@@ -183,7 +172,7 @@ func (d *Database) loadRollableTable(records [][]string, table string, rollExpre
 			}
 		}
 
-		meta := tables.Meta{Type: tableType, Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: true, RollExpression: rollExpression}
+		meta := tables.Meta{Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: true, RollExpression: rollExpression}
 		encoded, err := json.Marshal(meta)
 		if err != nil {
 			return err
@@ -427,27 +416,13 @@ func (d *Database) GetRow(roll int, table string) ([]string, error) {
 			}
 		}
 
-		advanced := false
-		meta := b.Get([]byte("tables.meta"))
-		if meta != nil {
-			var decoded tables.Meta
-			err := json.Unmarshal(meta, &decoded)
-			if err != nil {
-				return err
-			}
-
-			if decoded.Type == tables.Advanced {
-				advanced = true
-			}
-		}
-
 		var decoded tables.Row
 		err := json.Unmarshal(value, &decoded)
 		if err != nil {
 			return err
 		}
 
-		if advanced {
+		if decoded.HasRollExpression {
 			var rolledResults []string
 			for _, result := range decoded.Results {
 				rolledResults = append(rolledResults, rollString(result))
@@ -521,7 +496,7 @@ func (d *Database) ListTables() ([]string, error) {
 				if err != nil {
 					return err
 				}
-				tableData = append(tableData, fmt.Sprintf("%s,%s,%s,%t", decoded.Name, decoded.RollExpression, decoded.Type, decoded.RollableTable))
+				tableData = append(tableData, fmt.Sprintf("%s,%s,%t", decoded.Name, decoded.RollExpression, decoded.RollableTable))
 			}
 			return nil
 		})

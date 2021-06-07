@@ -452,12 +452,12 @@ func TestDatabase_ListTables(t *testing.T) {
 		t.Errorf("error while listing tables was not expected, but err was encountered %s\n", err)
 	}
 
-	if !contains(tables, "test,d6,Advanced Table,true") {
-		t.Errorf("expected to find [test,d6,Advanced Table,true] table, but it was not found: %s\n", tables)
+	if !contains(tables, "test,d6,true") {
+		t.Errorf("expected to find [test,d6,true] table, but it was not found: %s\n", tables)
 	}
 
-	if !contains(tables, "test2,,Advanced Table,false") {
-		t.Errorf("expected to find [test2,,Advanced Table,false] table, but it was not found: %s\n", tables)
+	if !contains(tables, "test2,,false") {
+		t.Errorf("expected to find [test2,,false] table, but it was not found: %s\n", tables)
 	}
 
 	err = os.Remove("./test.db")
@@ -575,12 +575,12 @@ func TestDatabase_DeleteTable(t *testing.T) {
 		t.Errorf("error while listing tables was not expected, but err was encountered %s\n", err)
 	}
 
-	if !contains(tables, "test,d6,Advanced Table,true") {
-		t.Errorf("expected to find [test,d6,Advanced Table,true] table, but it was not found: %s\n", tables)
+	if !contains(tables, "test,d6,true") {
+		t.Errorf("expected to find [test,d6,true] table, but it was not found: %s\n", tables)
 	}
 
-	if !contains(tables, "test2,,Advanced Table,false") {
-		t.Errorf("expected to find [test2,,Advanced Table,false] table, but it was not found: %s\n", tables)
+	if !contains(tables, "test2,,false") {
+		t.Errorf("expected to find [test2,,false] table, but it was not found: %s\n", tables)
 	}
 
 	err = db.Delete("test2")
@@ -593,12 +593,12 @@ func TestDatabase_DeleteTable(t *testing.T) {
 		t.Errorf("error while listing tables was not expected, but err was encountered %s\n", err)
 	}
 
-	if !contains(tables, "test,d6,Advanced Table,true") {
-		t.Errorf("expected to find [test,d6,Advanced Table,true] table, but it was not found: %s\n", tables)
+	if !contains(tables, "test,d6,true") {
+		t.Errorf("expected to find [test,d6,true] table, but it was not found: %s\n", tables)
 	}
 
-	if contains(tables, "test2,,Advanced Table,false") {
-		t.Errorf("expected not to find [test2,,Advanced Table,false] table, but it was found: %s\n", tables)
+	if contains(tables, "test2,,false") {
+		t.Errorf("expected not to find [test2,,false] table, but it was found: %s\n", tables)
 	}
 
 	err = os.Remove("./test.db")

@@ -1,15 +1,5 @@
 package tables
 
-//Type indicates the type of table.
-type Type string
-
-const (
-	//Simple type tables have columns  without any roll expressions
-	Simple Type = "Simple Table"
-	//Advanced type tables have some columns with roll expressions, this means they will need to be evaluated
-	Advanced Type = "Advanced Table"
-)
-
 //Table represents a table with meta data and rows
 type Table struct {
 	Meta Meta  `json:"meta"`
@@ -18,7 +8,6 @@ type Table struct {
 
 //Meta stores metadata for a table
 type Meta struct {
-	Type           Type     `json:"type"`
 	Name           string   `json:"name"`
 	Title          string   `json:"title"`
 	FlavorText     string   `json:"flavor_text"`
