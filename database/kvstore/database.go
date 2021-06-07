@@ -71,10 +71,12 @@ func (d *Database) loadStandardTable(records [][]string, table string) error {
 				continue
 			}
 
+			hasRollExpression := false
 			//check looks odd but once we find a row with at least one rollable string we won't bother checking the remainder
 			if tableType != tables.Advanced {
 				for _, value := range line {
 					if RollableString(value) {
+						hasRollExpression = true
 						tableType = tables.Advanced
 						break
 					}
@@ -82,7 +84,7 @@ func (d *Database) loadStandardTable(records [][]string, table string) error {
 			}
 
 			//for standard tables we don't have a "dieRoll", but we do use the row number here for sorting purposes.
-			row := tables.Row{DieRoll: i, RollRange: "", Results: line}
+			row := tables.Row{DieRoll: i, RollRange: "", HasRollExpression: hasRollExpression, Results: line}
 			encodedRow, _ := json.Marshal(row)
 
 			err = b.Put([]byte(line[0]), encodedRow)
@@ -157,17 +159,19 @@ func (d *Database) loadRollableTable(records [][]string, table string, rollExpre
 				}
 			}
 
+			hasRollExpression := false
 			//check looks odd but once we find a row with at least one rollable string we won't bother checking the remainder
 			if tableType != tables.Advanced {
 				for _, value := range line {
 					if RollableString(value) {
+						hasRollExpression = true
 						tableType = tables.Advanced
 						break
 					}
 				}
 			}
 
-			row := tables.Row{DieRoll: dieRoll, RollRange: rollRange, Results: line}
+			row := tables.Row{DieRoll: dieRoll, RollRange: rollRange, HasRollExpression: hasRollExpression, Results: line}
 			encodedRow, err := json.Marshal(row)
 			if err != nil {
 				return err

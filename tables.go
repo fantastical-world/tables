@@ -4,9 +4,9 @@ package tables
 type Type string
 
 const (
-	//Simple is simple
+	//Simple type tables have columns  without any roll expressions
 	Simple Type = "Simple Table"
-	//Advanced is advanced
+	//Advanced type tables have some columns with roll expressions, this means they will need to be evaluated
 	Advanced Type = "Advanced Table"
 )
 
@@ -31,9 +31,10 @@ type Meta struct {
 
 //Row represents a row from a table
 type Row struct {
-	DieRoll   int      `json:"die_roll"`
-	RollRange string   `json:"roll_range"`
-	Results   []string `json:"results"`
+	DieRoll           int      `json:"die_roll"`
+	RollRange         string   `json:"roll_range"`
+	HasRollExpression bool     `json:"has_roll_expression"`
+	Results           []string `json:"results"`
 }
 
 //Backingstore represents a general contract needed for persisting tables.
