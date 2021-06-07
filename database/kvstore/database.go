@@ -34,16 +34,9 @@ func New(dbLocation string) tables.Backingstore {
 
 //LoadTable will load a table with the CSV data. All existing data in the table will be replaced.
 func (d *Database) LoadTable(records [][]string, table string, rollExpression string) error {
-	if rollExpression == "" {
-		return d.loadStandardTable(records, table)
-	}
-
-	return d.loadRollableTable(records, table, rollExpression)
-}
-
-func (d *Database) loadStandardTable(records [][]string, table string) error {
 	d.Lock()
 	defer d.Unlock()
+	rollable := (rollExpression != "")
 	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
 	if err != nil {
 		return err
@@ -69,90 +62,24 @@ func (d *Database) loadStandardTable(records [][]string, table string) error {
 				continue
 			}
 
-			hasRollExpression := false
-			for _, value := range line {
-				if RollableString(value) {
-					hasRollExpression = true
-					break
-				}
-			}
-
-			//for standard tables we don't have a "dieRoll", but we do use the row number here for sorting purposes.
-			row := tables.Row{DieRoll: i, RollRange: "", HasRollExpression: hasRollExpression, Results: line}
-			encodedRow, _ := json.Marshal(row)
-
-			err = b.Put([]byte(line[0]), encodedRow)
-			if err != nil {
-				return err
-			}
-		}
-
-		meta := tables.Meta{Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: false, RollExpression: ""}
-		encoded, err := json.Marshal(meta)
-		if err != nil {
-			return err
-		}
-
-		err = b.Put([]byte("tables.meta"), encoded)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (d *Database) loadRollableTable(records [][]string, table string, rollExpression string) error {
-	d.Lock()
-	defer d.Unlock()
-	db, err := bolt.Open(d.dbLocation, 0600, &bolt.Options{Timeout: d.timeout})
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	err = db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(table))
-		if b != nil {
-			//should not need to worry about error since we are in here if a bucket exists
-			_ = tx.DeleteBucket([]byte(table))
-		}
-
-		b, err = tx.CreateBucket([]byte(table))
-		if err != nil {
-			return err
-		}
-
-		var headers []string
-		for i, line := range records {
-
-			if i == 0 {
-				headers = append(headers, line...)
-				continue
-			}
-
-			dieRoll := 0
+			dieRoll := i
 			rollRange := ""
-
-			if rangedRoll(line[0]) {
-				rollRange = line[0]
-				//we will set dieRoll to the range start for sorting purposes
-				parts := strings.Split(line[0], "-")
-				dieRoll, _ = strconv.Atoi(parts[0])
-			} else {
-				dieRoll, err = strconv.Atoi(line[0])
-				if err != nil {
-					return fmt.Errorf("first column must be an integer since it represents a die roll")
+			if rollable {
+				dieRoll = 0
+				if rangedRoll(line[0]) {
+					rollRange = line[0]
+					//we will set dieRoll to the range start for sorting purposes
+					parts := strings.Split(line[0], "-")
+					dieRoll, _ = strconv.Atoi(parts[0])
+				} else {
+					dieRoll, err = strconv.Atoi(line[0])
+					if err != nil {
+						return fmt.Errorf("first column must be an integer since it represents a die roll")
+					}
 				}
 			}
 
 			hasRollExpression := false
-			//check looks odd but once we find a row with at least one rollable string we won't bother checking the remainder
 			for _, value := range line {
 				if RollableString(value) {
 					hasRollExpression = true
@@ -161,10 +88,7 @@ func (d *Database) loadRollableTable(records [][]string, table string, rollExpre
 			}
 
 			row := tables.Row{DieRoll: dieRoll, RollRange: rollRange, HasRollExpression: hasRollExpression, Results: line}
-			encodedRow, err := json.Marshal(row)
-			if err != nil {
-				return err
-			}
+			encodedRow, _ := json.Marshal(row)
 
 			err = b.Put([]byte(line[0]), encodedRow)
 			if err != nil {
@@ -172,7 +96,7 @@ func (d *Database) loadRollableTable(records [][]string, table string, rollExpre
 			}
 		}
 
-		meta := tables.Meta{Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: true, RollExpression: rollExpression}
+		meta := tables.Meta{Name: table, Headers: headers, ColumnCount: len(headers), RollableTable: rollable, RollExpression: rollExpression}
 		encoded, err := json.Marshal(meta)
 		if err != nil {
 			return err
