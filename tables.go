@@ -2,10 +2,15 @@ package tables
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/fantastical-world/dice"
+)
+
+var (
+	TableRollExpressionRE = regexp.MustCompile(`^([0-9]*)([\?|#])([a-zA-Z,0-9,_,\.,\-]+)$`)
 )
 
 //Table represents a table with meta data and rows
@@ -36,17 +41,148 @@ type Row struct {
 
 //Backingstore represents a general contract needed for persisting tables.
 type Backingstore interface {
-	LoadTable(records [][]string, table string, rollExpression string) error
-	GetTable(table string) ([][]string, error)
-	TableExpression(expression string) ([][]string, error)
-	RandomRow(table string) ([]string, int, error)
-	GetRow(roll int, table string) ([]string, error)
-	GetHeader(table string) ([]string, error)
+	SaveTable(Table) error
+	GetTable(table string) (Table, error)
+	DeleteTable(string) error
 	ListTables() ([]string, error)
-	Delete(name string) error
-	GetMeta(name string) (Meta, error)
 }
 
+func (t Table) Header() []string {
+	return t.Meta.Headers
+}
+
+func (t Table) Records() [][]string {
+	var records [][]string
+	records = append(records, t.Meta.Headers)
+	for _, row := range t.Rows {
+		records = append(records, row.Results)
+	}
+
+	return records
+}
+
+func (t Table) RandomRow() ([]string, int, error) {
+	dieRoll := 0
+
+	if t.Meta.RollableTable {
+		_, dieRoll, _ = dice.RollExpression(t.Meta.RollExpression)
+	} else {
+		//in the past we didn't allow random rows if table not rollable, but now we want to
+		rollExpression := fmt.Sprintf("1d%d", len(t.Rows))
+		_, dieRoll, _ = dice.RollExpression(rollExpression)
+	}
+
+	row, err := t.GetRow(dieRoll)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return row, dieRoll, nil
+}
+
+func (t Table) GetRow(roll int) ([]string, error) {
+	for _, row := range t.Rows {
+		if row.DieRoll == roll {
+			if row.HasRollExpression {
+				var rolledResults []string
+				for _, result := range row.Results {
+					rolledResults = append(rolledResults, rollString(result))
+				}
+				return rolledResults, nil
+			}
+			return row.Results, nil
+		}
+	}
+
+	//this means we didn't find a row with the roll requested, so let's check again with ranges
+	for _, row := range t.Rows {
+		if RollInRange(roll, row.RollRange) {
+			if row.HasRollExpression {
+				var rolledResults []string
+				for _, result := range row.Results {
+					rolledResults = append(rolledResults, rollString(result))
+				}
+				return rolledResults, nil
+			}
+			return row.Results, nil
+		}
+	}
+
+	return nil, fmt.Errorf("roll value is not valid for this table")
+}
+
+func (t Table) Expression(te string) ([][]string, error) {
+	if !t.Meta.RollableTable {
+		return nil, fmt.Errorf("not a rollable table, no roll expression available")
+	}
+
+	wantsUnique := false
+	if strings.HasPrefix(te, "uni:") {
+		wantsUnique = true
+		te = strings.ReplaceAll(te, "uni:", "")
+	}
+
+	var data [][]string
+	if !TableRollExpressionRE.MatchString(te) {
+		return nil, fmt.Errorf("not a valid table expression, must be ?table or n?table or n#table (e.g. ?npc, 2?npc, 3#npc)")
+	}
+
+	match := TableRollExpressionRE.FindStringSubmatch(te)
+	request := match[2]
+	number, _ := strconv.Atoi(match[1])
+	if number == 0 && request == "?" {
+		number = 1
+	}
+	if number == 0 && request == "#" {
+		return nil, fmt.Errorf("not a valid table expression, a request to show a specific row must include a row number")
+	}
+
+	tableName := match[3]
+	if tableName != t.Meta.Name {
+		return nil, fmt.Errorf("this table is not the table in the table expression")
+	}
+
+	data = append(data, t.Meta.Headers)
+	if request == "?" {
+		if wantsUnique {
+			var previousRolls []int
+			for i := 0; i < number; i++ {
+				row, roll, err := t.RandomRow()
+				if containsRoll(previousRolls, roll) {
+					i--
+					continue
+				}
+				previousRolls = append(previousRolls, roll)
+				if err != nil {
+					return nil, err
+				}
+				data = append(data, row)
+			}
+			return data, nil
+		}
+
+		for i := 0; i < number; i++ {
+			row, _, err := t.RandomRow()
+			if err != nil {
+				return nil, err
+			}
+			data = append(data, row)
+		}
+		return data, nil
+	}
+
+	row, err := t.GetRow(number)
+	if err != nil {
+		return nil, err
+	}
+
+	data = append(data, row)
+
+	return data, nil
+}
+
+//Load returns a Table loaded with the provided records as its rows. The first record will be used as its header.
+//Providing a roll expression allow this table to be "rolled" using table expressions (e.g. 2?tablename, 4#tablename).
 func Load(records [][]string, name string, rollExpression string) (Table, error) {
 	var headers []string
 	var err error
@@ -93,8 +229,6 @@ func Load(records [][]string, name string, rollExpression string) (Table, error)
 	return table, nil
 }
 
-//helpers
-
 //RollableString returns true if value contains a roll expression.
 func RollableString(value string) bool {
 	return dice.ContainsRollExpressionBracedRE.MatchString(value)
@@ -119,4 +253,48 @@ func RangedRoll(value string) bool {
 
 	_, err = strconv.Atoi(parts[1])
 	return err == nil
+}
+
+//RollInRange checks if the roll value is in the range provided.
+func RollInRange(value int, rollRange string) bool {
+	if !RangedRoll(rollRange) {
+		return false
+	}
+
+	parts := strings.Split(rollRange, "-")
+	start, _ := strconv.Atoi(parts[0])
+	end, _ := strconv.Atoi(parts[1])
+
+	if value >= start && value <= end {
+		return true
+	}
+
+	return false
+}
+
+func rollString(value string) string {
+	rolledValue := value
+	if !dice.ContainsRollExpressionBracedRE.MatchString(value) {
+		return value
+	}
+
+	match := dice.ContainsRollExpressionBracedRE.FindAllStringSubmatch(value, 99) //limit to 99 rolls per value
+	for _, m := range match {
+		expression := strings.ReplaceAll(m[0], "{{", "")
+		expression = strings.ReplaceAll(expression, "}}", "")
+		_, sum, _ := dice.RollExpression(strings.Trim(expression, " "))
+		rolledValue = strings.Replace(rolledValue, m[0], strconv.Itoa(sum), 1)
+	}
+
+	return rolledValue
+}
+
+func containsRoll(i []int, roll int) bool {
+	for _, v := range i {
+		if v == roll {
+			return true
+		}
+	}
+
+	return false
 }
