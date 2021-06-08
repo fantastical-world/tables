@@ -17,6 +17,10 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+var (
+	TableRollExpressionRE = regexp.MustCompile(`^([0-9]*)([\?|#])([a-zA-Z,0-9,_,\.,\-]+)$`)
+)
+
 //Database is a simple representation of a table database.
 type Database struct {
 	sync.Mutex
@@ -180,12 +184,11 @@ func (d *Database) TableExpression(expression string) ([][]string, error) {
 
 	var data [][]string
 	//simple 1d4+1 style expressions for tables (n?table or n#table)
-	re := regexp.MustCompile(`^(?P<num>[0-9]*)([\?|#])(?P<table>[a-zA-Z,0-9,_,\.,\-]+)$`)
-	if !re.MatchString(expression) {
+	if !TableRollExpressionRE.MatchString(expression) {
 		return nil, fmt.Errorf("not a valid table expression, must be ?table or n?table or n#table (e.g. ?npc, 2?npc, 3#npc)")
 	}
 
-	match := re.FindStringSubmatch(expression)
+	match := TableRollExpressionRE.FindStringSubmatch(expression)
 	request := match[2]
 	number, _ := strconv.Atoi(match[1])
 	if number == 0 && request == "?" {
@@ -487,18 +490,16 @@ func (d *Database) GetMeta(name string) (tables.Meta, error) {
 
 //RollableString validates a string to see if it is a valid roll expression
 func RollableString(value string) bool {
-	re := regexp.MustCompile(`{{\s*(?P<num>[0-9]*)[d](?P<sides>[0-9]+)(?P<mod>\+|-)?(?P<mod_num>[0-9]+)?\s*}}`)
-	return re.MatchString(value)
+	return dice.ContainsRollExpressionBracedRE.MatchString(value)
 }
 
 func rollString(value string) string {
 	rolledValue := value
-	re := regexp.MustCompile(`{{\s*(?P<num>[0-9]*)[d](?P<sides>[0-9]+)(?P<mod>\+|-)?(?P<mod_num>[0-9]+)?\s*}}`)
-	if !re.MatchString(value) {
+	if !dice.ContainsRollExpressionBracedRE.MatchString(value) {
 		return value
 	}
 
-	match := re.FindAllStringSubmatch(value, 99) //limit to 99 rolls per value
+	match := dice.ContainsRollExpressionBracedRE.FindAllStringSubmatch(value, 99) //limit to 99 rolls per value
 	for _, m := range match {
 		expression := strings.ReplaceAll(m[0], "{{", "")
 		expression = strings.ReplaceAll(expression, "}}", "")

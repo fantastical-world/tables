@@ -145,7 +145,7 @@ func Test_Load_Error(t *testing.T) {
 	}
 }
 
-func Test_rangedRoll(t *testing.T) {
+func Test_RangedRoll(t *testing.T) {
 	testCases := []struct {
 		name  string
 		value string
@@ -190,7 +190,7 @@ func Test_rangedRoll(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			got := rangedRoll(test.value)
+			got := RangedRoll(test.value)
 
 			if got != test.want {
 				t.Errorf("want %t, got %t", test.want, got)

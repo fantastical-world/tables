@@ -2,9 +2,10 @@ package tables
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/fantastical-world/dice"
 )
 
 //Table represents a table with meta data and rows
@@ -62,7 +63,7 @@ func Load(records [][]string, name string, rollExpression string) (Table, error)
 		rollRange := ""
 		if rollable {
 			dieRoll = 0
-			if rangedRoll(row[0]) {
+			if RangedRoll(row[0]) {
 				rollRange = row[0]
 				//we will set dieRoll to the range start for sorting purposes
 				parts := strings.Split(row[0], "-")
@@ -77,7 +78,7 @@ func Load(records [][]string, name string, rollExpression string) (Table, error)
 
 		hasRollExpression := false
 		for _, column := range row {
-			if rollableString(column) {
+			if RollableString(column) {
 				hasRollExpression = true
 				break
 			}
@@ -94,12 +95,14 @@ func Load(records [][]string, name string, rollExpression string) (Table, error)
 
 //helpers
 
-func rollableString(value string) bool {
-	re := regexp.MustCompile(`{{\s*(?P<num>[0-9]*)[d](?P<sides>[0-9]+)(?P<mod>\+|-)?(?P<mod_num>[0-9]+)?\s*}}`)
-	return re.MatchString(value)
+//RollableString returns true if value contains a roll expression.
+func RollableString(value string) bool {
+	return dice.ContainsRollExpressionBracedRE.MatchString(value)
 }
 
-func rangedRoll(value string) bool {
+//RangedRoll returns true if value is a valid ranged roll.
+//To be a valid ranged roll, value must be in #-# format (e.g. 1-6, 6-8).
+func RangedRoll(value string) bool {
 	if !strings.Contains(value, "-") {
 		return false
 	}
