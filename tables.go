@@ -148,14 +148,20 @@ func (t Table) Expression(te string) ([][]string, error) {
 			var previousRolls []int
 			for i := 0; i < number; i++ {
 				row, roll, err := t.RandomRow()
+				if err != nil {
+					return nil, err
+				}
+
 				if containsRoll(previousRolls, roll) {
+					//if the number of previousRolls matches length of available rolls we can no longer find unique rows
+					if len(previousRolls) == len(t.Rows) {
+						break
+					}
+					//let's keep trying
 					i--
 					continue
 				}
 				previousRolls = append(previousRolls, roll)
-				if err != nil {
-					return nil, err
-				}
 				data = append(data, row)
 			}
 			return data, nil
@@ -168,6 +174,7 @@ func (t Table) Expression(te string) ([][]string, error) {
 			}
 			data = append(data, row)
 		}
+
 		return data, nil
 	}
 
