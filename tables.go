@@ -279,6 +279,20 @@ func RollInRange(value int, rollRange string) bool {
 	return false
 }
 
+//ParseTablename returns the tablename from a table expression.
+func ParseTablename(te string) string {
+	if strings.HasPrefix(te, "uni:") {
+		te = strings.ReplaceAll(te, "uni:", "")
+	}
+
+	if !TableRollExpressionRE.MatchString(te) {
+		return ""
+	}
+
+	match := TableRollExpressionRE.FindStringSubmatch(te)
+	return match[3]
+}
+
 func rollString(value string) string {
 	rolledValue := value
 	if !dice.ContainsRollExpressionBracedRE.MatchString(value) {

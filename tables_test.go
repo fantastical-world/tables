@@ -760,6 +760,50 @@ func Test_RangeInRoll(t *testing.T) {
 	}
 }
 
+func Test_ParseTablename(t *testing.T) {
+	testCases := []struct {
+		name       string
+		expression string
+		want       string
+	}{
+		{
+			name:       "validate that correct table name is returned when random rows requested...",
+			expression: "2?happytable",
+			want:       "happytable",
+		},
+		{
+			name:       "validate that correct table name is returned when random unique rows requested...",
+			expression: "uni:2?heyo",
+			want:       "heyo",
+		},
+		{
+			name:       "validate that correct table name is returned when specific row requested...",
+			expression: "7?stillhappy",
+			want:       "stillhappy",
+		},
+		{
+			name:       "validate that no table name is returned when expression invalid...",
+			expression: "imnotvalid?right",
+			want:       "",
+		},
+		{
+			name:       "validate that no table name is returned when expression is blank...",
+			expression: "",
+			want:       "",
+		},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+			got := ParseTablename(test.expression)
+
+			if got != test.want {
+				t.Errorf("want %s, got %s", test.want, got)
+			}
+		})
+	}
+}
+
 func Test_rollString(t *testing.T) {
 	testCases := []struct {
 		name    string
