@@ -18,6 +18,15 @@ var testCSV = [][]string{
 	{"6", "A pile of bones covers {{1d1}}GP", "You found some loot."},
 }
 
+func TestBackingstoreError_Error(t *testing.T) {
+	t.Run("validate that error message is correct...", func(t *testing.T) {
+		got := BackingstoreError("this is what i want")
+		if got.Error() != "this is what i want" {
+			t.Errorf("want this is what i want, got %s", got)
+		}
+	})
+}
+
 func Test_New(t *testing.T) {
 	_ = New("./test.db")
 }
@@ -42,6 +51,14 @@ func TestDatabase_SaveTable(t *testing.T) {
 
 		if !reflect.DeepEqual(table, got) {
 			t.Errorf("want %v, got %v", table, got)
+		}
+	})
+
+	t.Run("validate that save table returns an error if tabel invalid...", func(t *testing.T) {
+		emptyTable := tables.Table{}
+		err := db.SaveTable(emptyTable)
+		if err == nil {
+			t.Error("expected an error, but none encountered")
 		}
 	})
 
@@ -207,6 +224,19 @@ func Test_BadDatabaseErrors(t *testing.T) {
 		t.Error("expected an error, but none encountered\n")
 	}
 	err = db.DeleteTable("test")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+}
+
+func Test_MessupDatabaseErrors(t *testing.T) {
+	db := New("./messedup.db")
+
+	_, err := db.GetTable("notatable")
+	if err == nil {
+		t.Error("expected an error, but none encountered\n")
+	}
+	_, err = db.ListTables()
 	if err == nil {
 		t.Error("expected an error, but none encountered\n")
 	}
