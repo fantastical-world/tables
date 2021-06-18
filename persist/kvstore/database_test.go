@@ -18,15 +18,6 @@ var testCSV = [][]string{
 	{"6", "A pile of bones covers {{1d1}}GP", "You found some loot."},
 }
 
-func TestBackingstoreError_Error(t *testing.T) {
-	t.Run("validate that error message is correct...", func(t *testing.T) {
-		got := BackingstoreError("this is what i want")
-		if got.Error() != "this is what i want" {
-			t.Errorf("want this is what i want, got %s", got)
-		}
-	})
-}
-
 func Test_New(t *testing.T) {
 	_ = New("./test.db")
 }
@@ -54,7 +45,7 @@ func TestDatabase_SaveTable(t *testing.T) {
 		}
 	})
 
-	t.Run("validate that save table returns an error if tabel invalid...", func(t *testing.T) {
+	t.Run("validate that save table returns an error if table invalid...", func(t *testing.T) {
 		emptyTable := tables.Table{}
 		err := db.SaveTable(emptyTable)
 		if err == nil {
@@ -93,8 +84,8 @@ func TestDatabase_GetTable(t *testing.T) {
 
 	t.Run("validate that get table returns an error if table does not exist...", func(t *testing.T) {
 		got, err := db.GetTable("IDONTEXIST")
-		if err != ErrTableDoesNotExist {
-			t.Errorf("want %s, got %s", ErrTableDoesNotExist, err)
+		if err != tables.ErrTableDoesNotExist {
+			t.Errorf("want %s, got %s", tables.ErrTableDoesNotExist, err)
 		}
 		want := tables.Table{}
 		if !reflect.DeepEqual(want, got) {
@@ -136,8 +127,8 @@ func TestDatabase_DeleteTable(t *testing.T) {
 		}
 
 		got, err = db.GetTable("test")
-		if err != ErrTableDoesNotExist {
-			t.Errorf("want %s, got %s", ErrTableDoesNotExist, err)
+		if err != tables.ErrTableDoesNotExist {
+			t.Errorf("want %s, got %s", tables.ErrTableDoesNotExist, err)
 		}
 		want := tables.Table{}
 		if !reflect.DeepEqual(want, got) {
@@ -147,8 +138,8 @@ func TestDatabase_DeleteTable(t *testing.T) {
 
 	t.Run("validate that delete table returns an error if table does not exist...", func(t *testing.T) {
 		err = db.DeleteTable("IDONTEXIST")
-		if err != ErrTableDoesNotExist {
-			t.Errorf("want %s, got %s", ErrTableDoesNotExist, err)
+		if err != tables.ErrTableDoesNotExist {
+			t.Errorf("want %s, got %s", tables.ErrTableDoesNotExist, err)
 		}
 	})
 

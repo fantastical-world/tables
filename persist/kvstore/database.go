@@ -12,12 +12,6 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-type BackingstoreError string
-
-func (be BackingstoreError) Error() string { return string(be) }
-
-const ErrTableDoesNotExist = BackingstoreError("table does not exist")
-
 const TablesBucket = "__TABLES__"
 
 //Database is a simple representation of a table database.
@@ -76,7 +70,7 @@ func (d *Database) GetTable(name string) (tables.Table, error) {
 		b, _ := tx.CreateBucketIfNotExists([]byte(TablesBucket))
 		bytes := b.Get([]byte(name))
 		if bytes == nil {
-			return ErrTableDoesNotExist
+			return tables.ErrTableDoesNotExist
 		}
 
 		err := json.Unmarshal(bytes, &table)
@@ -111,7 +105,7 @@ func (d *Database) DeleteTable(name string) error {
 		b, _ := tx.CreateBucketIfNotExists([]byte(TablesBucket))
 		bytes := b.Get([]byte(name))
 		if bytes == nil {
-			return ErrTableDoesNotExist
+			return tables.ErrTableDoesNotExist
 		}
 
 		_ = b.Delete([]byte(name))

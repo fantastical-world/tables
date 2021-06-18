@@ -9,6 +9,13 @@ import (
 	"github.com/fantastical-world/dice"
 )
 
+type BackingstoreError string
+
+func (be BackingstoreError) Error() string { return string(be) }
+
+const ErrTableDoesNotExist = BackingstoreError("table does not exist")
+const ErrTableInvalid = BackingstoreError("table invalid")
+
 var (
 	TableRollExpressionRE = regexp.MustCompile(`^([0-9]*)([\?|#])([a-zA-Z,0-9,_,\.,\-]+)$`)
 )
@@ -41,9 +48,9 @@ type Row struct {
 
 //Backingstore represents a general contract needed for persisting tables.
 type Backingstore interface {
-	SaveTable(Table) error
-	GetTable(table string) (Table, error)
-	DeleteTable(string) error
+	SaveTable(table Table) error
+	GetTable(name string) (Table, error)
+	DeleteTable(name string) error
 	ListTables() ([]string, error)
 }
 

@@ -45,6 +45,15 @@ var nonRollableCSV = [][]string{
 	{"CRB", "Determines how often the character will be crabby."},
 }
 
+func TestBackingstoreError_Error(t *testing.T) {
+	t.Run("validate that error message is correct...", func(t *testing.T) {
+		got := BackingstoreError("this is what i want")
+		if got.Error() != "this is what i want" {
+			t.Errorf("want this is what i want, got %s", got)
+		}
+	})
+}
+
 func Test_Load(t *testing.T) {
 	var table Table
 	var err error
