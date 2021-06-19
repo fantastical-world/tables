@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/fantastical-world/tables"
@@ -19,23 +20,33 @@ type FileStore struct {
 
 var _ tables.Backingstore = (*FileStore)(nil)
 
-//New creates a new FileStore for persisting and working with tables.
-func New(location string) tables.Backingstore {
+//New creates a new FileStore using the provided location to read/write table files.
+//If location is a valid directory all JSON files in the directory will be read and
+//loaded into a Table. Any unsuccessful loads will be ignored.
+func New(location string) (tables.Backingstore, error) {
 	tableData := make(map[string]tables.Table)
-	_, err := os.Stat(location)
-	if err == nil {
-		data, err := ioutil.ReadFile(location)
-		if err == nil {
-			err = json.Unmarshal(data, &tableData)
-			if err != nil {
-				tableData = make(map[string]tables.Table)
+	entries, err := os.ReadDir(location)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".json") {
+			var table tables.Table
+			contents, err := ioutil.ReadFile(entry.Name())
+			if err == nil {
+				err = json.Unmarshal(contents, &table)
+				if err == nil {
+					tableData[table.Meta.Name] = table
+				}
 			}
 		}
 	}
 
-	return &FileStore{location: location, tables: tableData}
+	return &FileStore{location: location, tables: tableData}, nil
 }
 
+//SaveTable will add it to the FileStore and persist it to a JSON file.
 func (f *FileStore) SaveTable(table tables.Table) error {
 	f.Lock()
 	defer f.Unlock()
@@ -45,9 +56,9 @@ func (f *FileStore) SaveTable(table tables.Table) error {
 
 	f.tables[table.Meta.Name] = table
 
-	j, _ := json.Marshal(f.tables)
+	j, _ := json.Marshal(table)
 
-	fs, err := os.Create(f.location)
+	fs, err := os.Create(table.Hash() + ".json")
 	if err != nil {
 		return err
 	}
@@ -60,6 +71,7 @@ func (f *FileStore) SaveTable(table tables.Table) error {
 	return fs.Close()
 }
 
+//GetTable returns the specified table.
 func (f *FileStore) GetTable(name string) (tables.Table, error) {
 	f.Lock()
 	defer f.Unlock()
@@ -70,30 +82,21 @@ func (f *FileStore) GetTable(name string) (tables.Table, error) {
 	return table, nil
 }
 
+//DeleteTable will delete the table and JSON file.
 func (f *FileStore) DeleteTable(name string) error {
 	f.Lock()
 	defer f.Unlock()
-	_, exists := f.tables[name]
+	table, exists := f.tables[name]
 	if !exists {
 		return tables.ErrTableDoesNotExist
 	}
 
 	delete(f.tables, name)
 
-	j, _ := json.Marshal(f.tables)
-
-	fs, err := os.Create(f.location)
-	if err != nil {
-		return err
-	}
-
-	_, err = fs.Write(j)
-	if err != nil {
-		return err
-	}
-	return fs.Close()
+	return os.Remove(table.Hash() + ".json")
 }
 
+//ListTable returns a listing of all tables.
 func (f *FileStore) ListTables() ([]string, error) {
 	var tableData []string
 

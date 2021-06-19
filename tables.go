@@ -1,6 +1,7 @@
 package tables
 
 import (
+	"crypto/md5"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -193,6 +194,10 @@ func (t Table) Expression(te string) ([][]string, error) {
 	data = append(data, row)
 
 	return data, nil
+}
+
+func (t Table) Hash() string {
+	return fmt.Sprintf("%x", md5.Sum([]byte(t.Meta.Name)))
 }
 
 //Load returns a Table loaded with the provided records as its rows. The first record will be used as its header.
