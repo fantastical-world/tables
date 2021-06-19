@@ -19,7 +19,6 @@ var testCSV = [][]string{
 }
 
 var testJSON = `{"meta":{"name":"testfile","title":"","flavor_text":"","campaign":"","headers":["D6","Result","Description"],"column_count":3,"rollable_table":true,"roll_expression":"d6"},"rows":[{"die_roll":1,"roll_range":"","has_roll_expression":true,"results":["1","Fight {{1d1}} rats","The party runs across some dirty rats."]},{"die_roll":2,"roll_range":"","has_roll_expression":false,"results":["2","No encounter","Nothing to see here."]},{"die_roll":3,"roll_range":"","has_roll_expression":false,"results":["3","A wolf can be heard nearby","If the party is careful they may avoid the wolf."]},{"die_roll":4,"roll_range":"","has_roll_expression":true,"results":["4","{{1d1+1}} bats attack","Angry bats swarm and attack the party."]},{"die_roll":5,"roll_range":"","has_roll_expression":false,"results":["5","I can see you, can you see me?","A whisper can be heard in the trees."]},{"die_roll":6,"roll_range":"","has_roll_expression":true,"results":["6","A pile of bones covers {{1d1}}GP","You found some loot."]}]}`
-var badJSON = `{"counter": "dracula"}`
 
 func Test_New(t *testing.T) {
 	t.Run("validate that new with valid directory location is successful...", func(t *testing.T) {

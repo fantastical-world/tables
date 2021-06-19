@@ -98,6 +98,8 @@ func (f *FileStore) DeleteTable(name string) error {
 
 //ListTable returns a listing of all tables.
 func (f *FileStore) ListTables() ([]string, error) {
+	f.Lock()
+	defer f.Unlock()
 	var tableData []string
 
 	for _, v := range f.tables {

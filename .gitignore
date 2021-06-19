@@ -6,3 +6,4 @@ results
 *.db
 !bad.db
 !messedup.db
+*.json
