@@ -45,10 +45,7 @@ func (f *FileStore) SaveTable(table tables.Table) error {
 
 	f.tables[table.Meta.Name] = table
 
-	j, err := json.Marshal(f.tables)
-	if err != nil {
-		return err
-	}
+	j, _ := json.Marshal(f.tables)
 
 	fs, err := os.Create(f.location)
 	if err != nil {
@@ -83,10 +80,7 @@ func (f *FileStore) DeleteTable(name string) error {
 
 	delete(f.tables, name)
 
-	j, err := json.Marshal(f.tables)
-	if err != nil {
-		return err
-	}
+	j, _ := json.Marshal(f.tables)
 
 	fs, err := os.Create(f.location)
 	if err != nil {
