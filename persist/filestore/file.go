@@ -14,8 +14,9 @@ import (
 
 type FileStore struct {
 	sync.Mutex
+	tables map[string]tables.Table
+
 	location string
-	tables   map[string]tables.Table
 }
 
 var _ tables.Backingstore = (*FileStore)(nil)
