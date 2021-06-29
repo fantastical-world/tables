@@ -226,7 +226,7 @@ func TestTable_RandomRow(t *testing.T) {
 		want := table.Rows[i-1].Results
 		//rows 1, 4, and 6 have roll expressions, so I need to account for it
 		if (i == 1) || (i == 4) || (i == 6) {
-			want = []string{table.Rows[i-1].Results[0], rollString(table.Rows[i-1].Results[1]), table.Rows[i-1].Results[2]}
+			want = []string{table.Rows[i-1].Results[0], RollString(table.Rows[i-1].Results[1]), table.Rows[i-1].Results[2]}
 		}
 		if !reflect.DeepEqual(want, got) {
 			t.Errorf("want %v, got %v", want, got)
@@ -307,7 +307,7 @@ func TestTable_GetRow(t *testing.T) {
 		want := table.Rows[roll-1].Results
 		//rows 1, 4, and 6 have roll expressions, so I need to account for it
 		if (roll == 1) || (roll == 4) || (roll == 6) {
-			want = []string{table.Rows[roll-1].Results[0], rollString(table.Rows[roll-1].Results[1]), table.Rows[roll-1].Results[2]}
+			want = []string{table.Rows[roll-1].Results[0], RollString(table.Rows[roll-1].Results[1]), table.Rows[roll-1].Results[2]}
 		}
 		if !reflect.DeepEqual(want, got) {
 			t.Errorf("want %v, got %v", want, got)
@@ -354,7 +354,7 @@ func TestTable_GetRow(t *testing.T) {
 		if err != nil {
 			t.Errorf("unexpected error getting row, %s", err)
 		}
-		want := []string{table.Rows[1].Results[0], rollString(table.Rows[1].Results[1])}
+		want := []string{table.Rows[1].Results[0], RollString(table.Rows[1].Results[1])}
 
 		if !reflect.DeepEqual(want, got) {
 			t.Errorf("want %v, got %v", want, got)
@@ -388,7 +388,7 @@ func TestTable_Expression(t *testing.T) {
 		found := 0
 		for _, got := range rows {
 			for _, temp := range table.Rows {
-				want := []string{temp.Results[0], rollString(temp.Results[1]), temp.Results[2]}
+				want := []string{temp.Results[0], RollString(temp.Results[1]), temp.Results[2]}
 				if reflect.DeepEqual(want, got) {
 					found++
 					break
@@ -414,7 +414,7 @@ func TestTable_Expression(t *testing.T) {
 		found := 0
 		for _, got := range rows {
 			for _, temp := range table.Rows {
-				want := []string{temp.Results[0], rollString(temp.Results[1]), temp.Results[2]}
+				want := []string{temp.Results[0], RollString(temp.Results[1]), temp.Results[2]}
 				if reflect.DeepEqual(want, got) {
 					found++
 					break
@@ -512,7 +512,7 @@ func TestTable_Expression(t *testing.T) {
 
 		for _, got := range rows {
 			for _, temp := range table.Rows {
-				want := []string{temp.Results[0], rollString(temp.Results[1]), temp.Results[2]}
+				want := []string{temp.Results[0], RollString(temp.Results[1]), temp.Results[2]}
 				if reflect.DeepEqual(want, got) {
 					found++
 					break
@@ -813,7 +813,7 @@ func Test_ParseTablename(t *testing.T) {
 	}
 }
 
-func Test_rollString(t *testing.T) {
+func Test_RollString(t *testing.T) {
 	testCases := []struct {
 		name    string
 		rollStr string
@@ -843,7 +843,7 @@ func Test_rollString(t *testing.T) {
 
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			got := rollString(test.rollStr)
+			got := RollString(test.rollStr)
 
 			if got != test.want {
 				t.Errorf("want %s, got %s", test.want, got)

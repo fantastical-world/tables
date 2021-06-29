@@ -94,7 +94,7 @@ func (t Table) GetRow(roll int) ([]string, error) {
 			if row.HasRollExpression {
 				var rolledResults []string
 				for _, result := range row.Results {
-					rolledResults = append(rolledResults, rollString(result))
+					rolledResults = append(rolledResults, RollString(result))
 				}
 				return rolledResults, nil
 			}
@@ -108,7 +108,7 @@ func (t Table) GetRow(roll int) ([]string, error) {
 			if row.HasRollExpression {
 				var rolledResults []string
 				for _, result := range row.Results {
-					rolledResults = append(rolledResults, rollString(result))
+					rolledResults = append(rolledResults, RollString(result))
 				}
 				return rolledResults, nil
 			}
@@ -305,7 +305,7 @@ func ParseTablename(te string) string {
 	return match[3]
 }
 
-func rollString(value string) string {
+func RollString(value string) string {
 	rolledValue := value
 	if !dice.ContainsRollExpressionBracedRE.MatchString(value) {
 		return value
