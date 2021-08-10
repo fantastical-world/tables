@@ -10,12 +10,17 @@ import (
 	"github.com/fantastical-world/dice"
 )
 
-type BackingstoreError string
+type TableError string
 
-func (be BackingstoreError) Error() string { return string(be) }
+func (be TableError) Error() string { return string(be) }
 
-const ErrTableDoesNotExist = BackingstoreError("table does not exist")
-const ErrTableInvalid = BackingstoreError("table invalid")
+const ErrTableDoesNotExist = TableError("table does not exist")
+const ErrTableInvalid = TableError("table invalid")
+const ErrInvalidTableRollValue = TableError("roll value is not valid for this table")
+const ErrTableNotRollable = TableError("not a rollable table, no roll expression available")
+const ErrInvalidTableExpression = TableError("not a valid table expression")
+const ErrTableDoesNotMatchTableExpression = TableError("table is not the table in the table expression")
+const ErrInvalidRollColumn = TableError("first column must be an integer since it represents a die roll")
 
 var (
 	TableRollExpressionRE = regexp.MustCompile(`^([0-9]*)([\?|#])([a-zA-Z,0-9,_,\.,\-]+)$`)
@@ -116,12 +121,12 @@ func (t Table) GetRow(roll int) ([]string, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("roll value is not valid for this table")
+	return nil, ErrInvalidTableRollValue
 }
 
 func (t Table) Expression(te string) ([][]string, error) {
 	if !t.Meta.RollableTable {
-		return nil, fmt.Errorf("not a rollable table, no roll expression available")
+		return nil, ErrTableNotRollable
 	}
 
 	wantsUnique := false
@@ -132,7 +137,7 @@ func (t Table) Expression(te string) ([][]string, error) {
 
 	var data [][]string
 	if !TableRollExpressionRE.MatchString(te) {
-		return nil, fmt.Errorf("not a valid table expression, must be ?table or n?table or n#table (e.g. ?npc, 2?npc, 3#npc)")
+		return nil, ErrInvalidTableExpression
 	}
 
 	match := TableRollExpressionRE.FindStringSubmatch(te)
@@ -142,12 +147,12 @@ func (t Table) Expression(te string) ([][]string, error) {
 		number = 1
 	}
 	if number == 0 && request == "#" {
-		return nil, fmt.Errorf("not a valid table expression, a request to show a specific row must include a row number")
+		return nil, ErrInvalidTableExpression
 	}
 
 	tableName := match[3]
 	if tableName != t.Meta.Name {
-		return nil, fmt.Errorf("this table is not the table in the table expression")
+		return nil, ErrTableDoesNotMatchTableExpression
 	}
 
 	data = append(data, t.Meta.Headers)
@@ -226,7 +231,7 @@ func Load(records [][]string, name string, rollExpression string) (Table, error)
 			} else {
 				dieRoll, err = strconv.Atoi(row[0])
 				if err != nil {
-					return Table{}, fmt.Errorf("first column must be an integer since it represents a die roll")
+					return Table{}, ErrInvalidRollColumn
 				}
 			}
 		}

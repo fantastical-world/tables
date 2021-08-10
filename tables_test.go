@@ -45,9 +45,24 @@ var nonRollableCSV = [][]string{
 	{"CRB", "Determines how often the character will be crabby."},
 }
 
-func TestBackingstoreError_Error(t *testing.T) {
+func TestTable_Hash(t *testing.T) {
+	t.Run("validate that table hash is returned...", func(t *testing.T) {
+		var table Table
+		table, err := Load(testCSV, "test", "d6")
+		if err != nil {
+			t.Errorf("unexpected error, %s", err)
+		}
+
+		got := table.Hash()
+		want := "098f6bcd4621d373cade4e832627b4f6"
+		if got != want {
+			t.Errorf("want %s, got %s", want, got)
+		}
+	})
+}
+func TestTableError_Error(t *testing.T) {
 	t.Run("validate that error message is correct...", func(t *testing.T) {
-		got := BackingstoreError("this is what i want")
+		got := TableError("this is what i want")
 		if got.Error() != "this is what i want" {
 			t.Errorf("want this is what i want, got %s", got)
 		}
