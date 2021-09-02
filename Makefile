@@ -1,5 +1,4 @@
 # Makefile for tables package
-BRANCH_NAME := $(shell git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/')
 BUILD_COMMIT := $(shell git describe --tags --always --dirty --all --match=v*)
 BUILD_DATE := $(shell date -u +%b-%d-%Y,%T-UTC)
 BUILD_SEMVER := $(shell cat .SEMVER)
