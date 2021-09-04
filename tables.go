@@ -99,7 +99,7 @@ func (t Table) GetRow(roll int) ([]string, error) {
 			if row.HasRollExpression {
 				var rolledResults []string
 				for _, result := range row.Results {
-					rolledResults = append(rolledResults, RollString(result))
+					rolledResults = append(rolledResults, dice.RollString(result))
 				}
 				return rolledResults, nil
 			}
@@ -113,7 +113,7 @@ func (t Table) GetRow(roll int) ([]string, error) {
 			if row.HasRollExpression {
 				var rolledResults []string
 				for _, result := range row.Results {
-					rolledResults = append(rolledResults, RollString(result))
+					rolledResults = append(rolledResults, dice.RollString(result))
 				}
 				return rolledResults, nil
 			}
@@ -308,23 +308,6 @@ func ParseTablename(te string) string {
 
 	match := TableRollExpressionRE.FindStringSubmatch(te)
 	return match[3]
-}
-
-func RollString(value string) string {
-	rolledValue := value
-	if !dice.ContainsRollExpressionBracedRE.MatchString(value) {
-		return value
-	}
-
-	match := dice.ContainsRollExpressionBracedRE.FindAllStringSubmatch(value, 99) //limit to 99 rolls per value
-	for _, m := range match {
-		expression := strings.ReplaceAll(m[0], "{{", "")
-		expression = strings.ReplaceAll(expression, "}}", "")
-		_, sum, _ := dice.RollExpression(strings.Trim(expression, " "))
-		rolledValue = strings.Replace(rolledValue, m[0], strconv.Itoa(sum), 1)
-	}
-
-	return rolledValue
 }
 
 func containsRoll(i []int, roll int) bool {
