@@ -314,7 +314,7 @@ func TestTable_GetRow(t *testing.T) {
 			t.Errorf("unexpected error, %s", err)
 		}
 
-		_, roll := dice.Roll(1, 6)
+		_, roll, _ := dice.Roll(1, 6)
 		got, err := table.GetRow(roll)
 		if err != nil {
 			t.Errorf("unexpected error getting row, %s", err)
@@ -334,7 +334,7 @@ func TestTable_GetRow(t *testing.T) {
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
 		}
-		_, roll := dice.Roll(1, 6)
+		_, roll, _ := dice.Roll(1, 6)
 		got, err := table.GetRow(roll)
 		if err != nil {
 			t.Errorf("unexpected error getting row, %s", err)
