@@ -46,7 +46,7 @@ var nonRollableCSV = [][]string{
 }
 
 func TestTable_Hash(t *testing.T) {
-	t.Run("validate that table hash is returned...", func(t *testing.T) {
+	t.Run("validate that table hash is returned", func(t *testing.T) {
 		var table Table
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
@@ -61,10 +61,66 @@ func TestTable_Hash(t *testing.T) {
 	})
 }
 func TestTableError_Error(t *testing.T) {
-	t.Run("validate that error message is correct...", func(t *testing.T) {
+	t.Run("validate that error message is correct", func(t *testing.T) {
 		got := TableError("this is what i want")
 		if got.Error() != "this is what i want" {
 			t.Errorf("want this is what i want, got %s", got)
+		}
+	})
+}
+
+func TestTable_Pack(t *testing.T) {
+	t.Run("validate table can be packed properly", func(t *testing.T) {
+		table := Table{
+			Meta: Meta{
+				Name: "test-table",
+			},
+			Rows: []Row{
+				{
+					DieRoll: 1,
+					Results: []string{"ONE", "TWO"},
+				},
+			},
+		}
+		wantName := "test-table"
+		wantBytes := []byte(`{"meta":{"name":"test-table","title":"","flavor_text":"","campaign":"","headers":null,"column_count":0,"rollable_table":false,"roll_expression":""},"rows":[{"die_roll":1,"roll_range":"","has_roll_expression":false,"results":["ONE","TWO"]}]}`)
+		gotName, gotBytes := table.Pack()
+		if gotName != wantName {
+			t.Errorf("want %s, got %s", wantName, gotName)
+		}
+		if string(gotBytes) != string(wantBytes) {
+			t.Errorf("want %s, got %s", wantBytes, gotBytes)
+		}
+	})
+}
+
+func TestTable_Unpack(t *testing.T) {
+	t.Run("validate table can be unpacked properly", func(t *testing.T) {
+		want := Table{
+			Meta: Meta{
+				Name: "test-table",
+			},
+			Rows: []Row{
+				{
+					DieRoll: 1,
+					Results: []string{"ONE", "TWO"},
+				},
+			},
+		}
+		testBytes := []byte(`{"meta":{"name":"test-table","title":"","flavor_text":"","campaign":"","headers":null,"column_count":0,"rollable_table":false,"roll_expression":""},"rows":[{"die_roll":1,"roll_range":"","has_roll_expression":false,"results":["ONE","TWO"]}]}`)
+		got := &Table{}
+		got.Unpack(testBytes)
+		if !reflect.DeepEqual(*got, want) {
+			t.Errorf("want %v, got %v", want, *got)
+		}
+	})
+
+	t.Run("validate that table is empty if unpack fails", func(t *testing.T) {
+		want := Table{}
+		got := &Table{}
+		got.Unpack(nil)
+		if !reflect.DeepEqual(*got, want) {
+			t.Errorf("want %v, got %v", want, *got)
 		}
 	})
 }
@@ -73,7 +129,7 @@ func Test_Load(t *testing.T) {
 	var table Table
 	var err error
 
-	t.Run("validate loaded table, and meta data...", func(t *testing.T) {
+	t.Run("validate loaded table, and meta data", func(t *testing.T) {
 		table, err = Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -91,32 +147,32 @@ func Test_Load(t *testing.T) {
 		want  Row
 	}{
 		{
-			name:  "validate loaded table row 1...",
+			name:  "validate loaded table row 1",
 			index: 0,
 			want:  Row{DieRoll: 1, RollRange: "", HasRollExpression: true, Results: []string{"1", "Fight {{1d1}} rats", "The party runs across some dirty rats."}},
 		},
 		{
-			name:  "validate loaded table row 2...",
+			name:  "validate loaded table row 2",
 			index: 1,
 			want:  Row{DieRoll: 2, RollRange: "", HasRollExpression: false, Results: []string{"2", "No encounter", "Nothing to see here."}},
 		},
 		{
-			name:  "validate loaded table row 3...",
+			name:  "validate loaded table row 3",
 			index: 2,
 			want:  Row{DieRoll: 3, RollRange: "", HasRollExpression: false, Results: []string{"3", "A wolf can be heard nearby", "If the party is careful they may avoid the wolf."}},
 		},
 		{
-			name:  "validate loaded table row 4...",
+			name:  "validate loaded table row 4",
 			index: 3,
 			want:  Row{DieRoll: 4, RollRange: "", HasRollExpression: true, Results: []string{"4", "{{1d1+1}} bats attack", "Angry bats swarm and attack the party."}},
 		},
 		{
-			name:  "validate loaded table row 5...",
+			name:  "validate loaded table row 5",
 			index: 4,
 			want:  Row{DieRoll: 5, RollRange: "", HasRollExpression: false, Results: []string{"5", "I can see you, can you see me?", "A whisper can be heard in the trees."}},
 		},
 		{
-			name:  "validate loaded table row 6...",
+			name:  "validate loaded table row 6",
 			index: 5,
 			want:  Row{DieRoll: 6, RollRange: "", HasRollExpression: true, Results: []string{"6", "A pile of bones covers {{1d1}}GP", "You found some loot."}},
 		},
@@ -137,7 +193,7 @@ func Test_Load_Ranged(t *testing.T) {
 	var table Table
 	var err error
 
-	t.Run("validate loaded table, and meta data...", func(t *testing.T) {
+	t.Run("validate loaded table, and meta data", func(t *testing.T) {
 		table, err = Load(rangedCSV, "ranged", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -155,17 +211,17 @@ func Test_Load_Ranged(t *testing.T) {
 		want  Row
 	}{
 		{
-			name:  "validate row 1...",
+			name:  "validate row 1",
 			index: 0,
 			want:  Row{DieRoll: 1, RollRange: "1-2", HasRollExpression: false, Results: []string{"1-2", "You rolled a 1 or 2"}},
 		},
 		{
-			name:  "validate row 2...",
+			name:  "validate row 2",
 			index: 1,
 			want:  Row{DieRoll: 3, RollRange: "3-4", HasRollExpression: false, Results: []string{"3-4", "You rolled a 3 or 4"}},
 		},
 		{
-			name:  "validate row 3...",
+			name:  "validate row 3",
 			index: 2,
 			want:  Row{DieRoll: 5, RollRange: "5-6", HasRollExpression: false, Results: []string{"5-6", "You rolled a 5 or 6"}},
 		},
@@ -183,7 +239,7 @@ func Test_Load_Ranged(t *testing.T) {
 }
 
 func Test_Load_Error(t *testing.T) {
-	t.Run("validate an empty table and error is returned when data is invalid...", func(t *testing.T) {
+	t.Run("validate an empty table and error is returned when data is invalid", func(t *testing.T) {
 		table, err := Load(badCSV, "bad", "d6")
 		if err == nil {
 			t.Error("expected error, got nil")
@@ -198,7 +254,7 @@ func Test_Load_Error(t *testing.T) {
 }
 
 func TestTable_Header(t *testing.T) {
-	t.Run("validate the header returned matched the loaded header...", func(t *testing.T) {
+	t.Run("validate the header returned matched the loaded header", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -213,7 +269,7 @@ func TestTable_Header(t *testing.T) {
 }
 
 func TestTable_Records(t *testing.T) {
-	t.Run("validate the records returned match the loaded records...", func(t *testing.T) {
+	t.Run("validate the records returned match the loaded records", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -228,7 +284,7 @@ func TestTable_Records(t *testing.T) {
 }
 
 func TestTable_RandomRow(t *testing.T) {
-	t.Run("validate the random row returned...", func(t *testing.T) {
+	t.Run("validate the random row returned", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -248,7 +304,7 @@ func TestTable_RandomRow(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the random ranged row returned...", func(t *testing.T) {
+	t.Run("validate the random ranged row returned", func(t *testing.T) {
 		table, err := Load(rangedCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -279,7 +335,7 @@ func TestTable_RandomRow(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the random row returned for non-rollable tables...", func(t *testing.T) {
+	t.Run("validate the random row returned for non-rollable tables", func(t *testing.T) {
 		table, err := Load(nonRollableCSV, "abilities", "")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -295,7 +351,7 @@ func TestTable_RandomRow(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned for a table with invalid roll expression...", func(t *testing.T) {
+	t.Run("validate an error is returned for a table with invalid roll expression", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "17d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -308,7 +364,7 @@ func TestTable_RandomRow(t *testing.T) {
 }
 
 func TestTable_GetRow(t *testing.T) {
-	t.Run("validate the row returned...", func(t *testing.T) {
+	t.Run("validate the row returned", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -329,7 +385,7 @@ func TestTable_GetRow(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the ranged row returned...", func(t *testing.T) {
+	t.Run("validate the ranged row returned", func(t *testing.T) {
 		table, err := Load(rangedCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -360,7 +416,7 @@ func TestTable_GetRow(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the ranged row returned if end of range requested...", func(t *testing.T) {
+	t.Run("validate the ranged row returned if end of range requested", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -376,7 +432,7 @@ func TestTable_GetRow(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned for an invalid roll value...", func(t *testing.T) {
+	t.Run("validate an error is returned for an invalid roll value", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -389,7 +445,7 @@ func TestTable_GetRow(t *testing.T) {
 }
 
 func TestTable_Expression(t *testing.T) {
-	t.Run("validate the random row returned...", func(t *testing.T) {
+	t.Run("validate the random row returned", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -415,7 +471,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the random row returned deux...", func(t *testing.T) {
+	t.Run("validate the random row returned deux", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -441,7 +497,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the random ranged row returned...", func(t *testing.T) {
+	t.Run("validate the random ranged row returned", func(t *testing.T) {
 		table, err := Load(rangedCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -467,7 +523,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the specific row returned...", func(t *testing.T) {
+	t.Run("validate the specific row returned", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -489,7 +545,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the specific ranged row returned...", func(t *testing.T) {
+	t.Run("validate the specific ranged row returned", func(t *testing.T) {
 		table, err := Load(rangedCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -512,7 +568,7 @@ func TestTable_Expression(t *testing.T) {
 
 	})
 
-	t.Run("validate the random row returned are unique...", func(t *testing.T) {
+	t.Run("validate the random row returned are unique", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -543,7 +599,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate the number of random rows returned when asking for unique and there are not enough...", func(t *testing.T) {
+	t.Run("validate the number of random rows returned when asking for unique and there are not enough", func(t *testing.T) {
 		table, err := Load(testCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -558,7 +614,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned for a non-rollable table...", func(t *testing.T) {
+	t.Run("validate an error is returned for a non-rollable table", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -569,7 +625,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned for a invalid table expression...", func(t *testing.T) {
+	t.Run("validate an error is returned for a invalid table expression", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -580,7 +636,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned for a invalid table expression deux...", func(t *testing.T) {
+	t.Run("validate an error is returned for a invalid table expression deux", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -591,7 +647,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned when a row that doesn't exist is requested...", func(t *testing.T) {
+	t.Run("validate an error is returned when a row that doesn't exist is requested", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -602,7 +658,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned when a random row that doesn't exist is requested...", func(t *testing.T) {
+	t.Run("validate an error is returned when a random row that doesn't exist is requested", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "17d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -613,7 +669,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned when a random unique row that doesn't exist is requested...", func(t *testing.T) {
+	t.Run("validate an error is returned when a random unique row that doesn't exist is requested", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "17d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -624,7 +680,7 @@ func TestTable_Expression(t *testing.T) {
 		}
 	})
 
-	t.Run("validate an error is returned for a table expression on a different table...", func(t *testing.T) {
+	t.Run("validate an error is returned for a table expression on a different table", func(t *testing.T) {
 		table, err := Load(rangedWithExpressionCSV, "test", "d6")
 		if err != nil {
 			t.Errorf("unexpected error, %s", err)
@@ -643,27 +699,27 @@ func Test_RollableString(t *testing.T) {
 		want  bool
 	}{
 		{
-			name:  "validate true is returned if value contains a roll expression...",
+			name:  "validate true is returned if value contains a roll expression",
 			value: "This string can be roll {{2d3+4}} times.",
 			want:  true,
 		},
 		{
-			name:  "validate true is returned if value contains roll expressions...",
+			name:  "validate true is returned if value contains roll expressions",
 			value: "This string can be roll {{2d3+4}} times. Or {{1d6}} times.",
 			want:  true,
 		},
 		{
-			name:  "validate false is returned if value does not contain any roll expressions...",
+			name:  "validate false is returned if value does not contain any roll expressions",
 			value: "This string can not be rolled at all.",
 			want:  false,
 		},
 		{
-			name:  "validate false is returned if value does not contain any roll expressions in {{}}...",
+			name:  "validate false is returned if value does not contain any roll expressions in {{}}",
 			value: "This string can be roll 2d3+4 times.",
 			want:  false,
 		},
 		{
-			name:  "validate false is returned if value does not contain any valid roll expressions...",
+			name:  "validate false is returned if value does not contain any valid roll expressions",
 			value: "This string can be roll {{2f3+a}} times.",
 			want:  false,
 		},
@@ -687,37 +743,37 @@ func Test_RangedRoll(t *testing.T) {
 		want  bool
 	}{
 		{
-			name:  "validate true is returned if value is a range...",
+			name:  "validate true is returned if value is a range",
 			value: "1-4",
 			want:  true,
 		},
 		{
-			name:  "validate false is returned if value has too many dashes...",
+			name:  "validate false is returned if value has too many dashes",
 			value: "1-4-8-9",
 			want:  false,
 		},
 		{
-			name:  "validate false is returned if value has non-numerics in first place...",
+			name:  "validate false is returned if value has non-numerics in first place",
 			value: "A-4",
 			want:  false,
 		},
 		{
-			name:  "validate false is returned if value has non-numerics in second place...",
+			name:  "validate false is returned if value has non-numerics in second place",
 			value: "6-B",
 			want:  false,
 		},
 		{
-			name:  "validate false is returned if value has non-numerics in both places...",
+			name:  "validate false is returned if value has non-numerics in both places",
 			value: "A-B",
 			want:  false,
 		},
 		{
-			name:  "validate false is returned if value is not a range...",
+			name:  "validate false is returned if value is not a range",
 			value: "8",
 			want:  false,
 		},
 		{
-			name:  "validate false is returned if value is invalid...",
+			name:  "validate false is returned if value is invalid",
 			value: "Not even close",
 			want:  false,
 		},
@@ -742,31 +798,31 @@ func Test_RangeInRoll(t *testing.T) {
 		want      bool
 	}{
 		{
-			name:      "validate true is returned if roll is in range...",
+			name:      "validate true is returned if roll is in range",
 			roll:      3,
 			rollRange: "1-4",
 			want:      true,
 		},
 		{
-			name:      "validate true is returned if roll is at start...",
+			name:      "validate true is returned if roll is at start",
 			roll:      6,
 			rollRange: "6-10",
 			want:      true,
 		},
 		{
-			name:      "validate true is returned if roll is at end...",
+			name:      "validate true is returned if roll is at end",
 			roll:      8,
 			rollRange: "2-8",
 			want:      true,
 		},
 		{
-			name:      "validate false is returned if roll is not in range...",
+			name:      "validate false is returned if roll is not in range",
 			roll:      8,
 			rollRange: "1-4",
 			want:      false,
 		},
 		{
-			name:      "validate false is returned if roll range is not a range...",
+			name:      "validate false is returned if roll range is not a range",
 			roll:      8,
 			rollRange: "8",
 			want:      false,
@@ -791,27 +847,27 @@ func Test_ParseTablename(t *testing.T) {
 		want       string
 	}{
 		{
-			name:       "validate that correct table name is returned when random rows requested...",
+			name:       "validate that correct table name is returned when random rows requested",
 			expression: "2?happytable",
 			want:       "happytable",
 		},
 		{
-			name:       "validate that correct table name is returned when random unique rows requested...",
+			name:       "validate that correct table name is returned when random unique rows requested",
 			expression: "uni:2?heyo",
 			want:       "heyo",
 		},
 		{
-			name:       "validate that correct table name is returned when specific row requested...",
+			name:       "validate that correct table name is returned when specific row requested",
 			expression: "7?stillhappy",
 			want:       "stillhappy",
 		},
 		{
-			name:       "validate that no table name is returned when expression invalid...",
+			name:       "validate that no table name is returned when expression invalid",
 			expression: "imnotvalid?right",
 			want:       "",
 		},
 		{
-			name:       "validate that no table name is returned when expression is blank...",
+			name:       "validate that no table name is returned when expression is blank",
 			expression: "",
 			want:       "",
 		},
@@ -836,25 +892,25 @@ func Test_containsRoll(t *testing.T) {
 		want  bool
 	}{
 		{
-			name:  "validate true is returned when roll is in rolls...",
+			name:  "validate true is returned when roll is in rolls",
 			roll:  3,
 			rolls: []int{2, 5, 3, 6},
 			want:  true,
 		},
 		{
-			name:  "validate false is returned when roll is not in rolls...",
+			name:  "validate false is returned when roll is not in rolls",
 			roll:  7,
 			rolls: []int{2, 5, 3, 6},
 			want:  false,
 		},
 		{
-			name:  "validate false is returned when rolls is empty...",
+			name:  "validate false is returned when rolls is empty",
 			roll:  12,
 			rolls: []int{},
 			want:  false,
 		},
 		{
-			name:  "validate false is returned when rolls is nil...",
+			name:  "validate false is returned when rolls is nil",
 			roll:  12,
 			rolls: nil,
 			want:  false,

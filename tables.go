@@ -2,6 +2,7 @@ package tables
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -52,12 +53,17 @@ type Row struct {
 	Results           []string `json:"results"`
 }
 
-//Backingstore represents a general contract needed for persisting tables.
-type Backingstore interface {
-	SaveTable(table Table) error
-	GetTable(name string) (Table, error)
-	DeleteTable(name string) error
-	ListTables() ([]string, error)
+func (t Table) Pack() (string, []byte) {
+	b, _ := json.Marshal(t)
+
+	return t.Meta.Name, b
+}
+
+func (t *Table) Unpack(data []byte) {
+	err := json.Unmarshal(data, &t)
+	if err != nil {
+		t = &Table{}
+	}
 }
 
 func (t Table) Header() []string {
