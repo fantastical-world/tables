@@ -36,6 +36,7 @@ type Table struct {
 //Meta stores metadata for a table
 type Meta struct {
 	Name           string   `json:"name"`
+	DisplayName    string   `json:"display_name"`
 	Title          string   `json:"title"`
 	FlavorText     string   `json:"flavor_text"`
 	Campaign       string   `json:"campaign"`
@@ -213,7 +214,7 @@ func (t Table) Hash() string {
 
 //Load returns a Table loaded with the provided records as its rows. The first record will be used as its header.
 //Providing a roll expression allow this table to be "rolled" using table expressions (e.g. 2?tablename, 4#tablename).
-func Load(records [][]string, name string, rollExpression string) (Table, error) {
+func Load(records [][]string, name, displayName, rollExpression string) (Table, error) {
 	var headers []string
 	var err error
 	table := Table{}
@@ -254,7 +255,7 @@ func Load(records [][]string, name string, rollExpression string) (Table, error)
 		table.Rows = append(table.Rows, tableRow)
 	}
 
-	table.Meta = Meta{Name: name, Headers: headers, ColumnCount: len(headers), RollableTable: rollable, RollExpression: rollExpression}
+	table.Meta = Meta{Name: name, DisplayName: displayName, Headers: headers, ColumnCount: len(headers), RollableTable: rollable, RollExpression: rollExpression}
 
 	return table, nil
 }
