@@ -1,5 +1,5 @@
 # Makefile for tables package
-BUILD_COMMIT := $(shell git describe --tags --always --dirty --all --match=v*)
+BUILD_COMMIT := $(shell git describe --tags --always --dirty --match=v*)
 BUILD_DATE := $(shell date -u +%b-%d-%Y,%T-UTC)
 BUILD_SEMVER := $(shell cat .SEMVER)
 
